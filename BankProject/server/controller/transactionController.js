@@ -6,7 +6,8 @@ async function transfer(req, res)
     
     const senderUserId = req.user.id; 
 
-    if (!receiverEmail || amount === undefined || amount === null) {
+    if (!receiverEmail || amount === undefined || amount === null) 
+    {
         return res.status(400).json({ error: "Missing required fields: receiverEmail and amount are required" });
     }
 
@@ -17,7 +18,8 @@ async function transfer(req, res)
 
     const transferAmount = Number(amount);
 
-    if (isNaN(transferAmount) || transferAmount <= 0 || transferAmount <= 0.5) {
+    if (isNaN(transferAmount) || transferAmount <= 0 || transferAmount <= 0.5) 
+    {
         return res.status(400).json({ error: "Amount must be a valid number greater than 0" });
     }
 

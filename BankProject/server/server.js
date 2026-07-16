@@ -23,18 +23,18 @@ const jwtSecret = process.env.JWT_SECRET;
 //     credentials: true 
 // }));
 
-const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 100, 
-    message: {
-        error: "Too Many Requests",
-        message: "Too Many Requests in short time."
-    },
-    standardHeaders: true, 
-    legacyHeaders: false, 
-});
+// const generalLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, 
+//     max: 100, 
+//     message: {
+//         error: "Too Many Requests",
+//         message: "Too Many Requests in short time."
+//     },
+//     standardHeaders: true, 
+//     legacyHeaders: false, 
+// });
 
-app.use(generalLimiter);
+// app.use(generalLimiter);
 
 
 //only add it somehow to the user login option not in the entire server

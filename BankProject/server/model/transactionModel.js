@@ -92,10 +92,12 @@ const Transaction = {
                 }
             };
 
-        } catch (error) {
+        } catch (error) 
+        {
             await client.query('ROLLBACK');
             throw error;
-        } finally {
+        } finally 
+        {
             client.release();
         }
     },
@@ -140,7 +142,7 @@ const Transaction = {
             LEFT JOIN users u_receiver ON a_receiver.user_id = u_receiver.id
             WHERE a_sender.user_id = $1 OR a_receiver.user_id = $1
             ORDER BY t.created_at DESC
-            LIMIT 10; -- נביא רק את 10 העסקאות האחרונות לדאשבורד מהיר
+            LIMIT 10; 
         `;
         
         const { rows } = await db.query(query, [userId]);

@@ -19,8 +19,6 @@ router.get('/me', verifyToken, (req, res) =>
 
 router.get('/verify-email', authController.verifyEmail);
 
-router.post('/logout', (req, res) => {
-    res.status(201).json({ message: "Logout Requested" });
-});
+router.post('/logout', authController.logout);
 
 module.exports = router;

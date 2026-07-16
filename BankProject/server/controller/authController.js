@@ -125,7 +125,7 @@ async function login(req, res)
             message: "Request body is missing. Make sure Content-Type is set to application/json." 
         });
     }
-    
+
     const { email, password } = req.body;
 
     if (!email || !password) 
@@ -215,11 +215,29 @@ async function verifyEmail(req, res) {
         console.error('Verification error:', error);
         return res.status(400).send('<h1>Verification link is invalid or has expired.</h1>');
     }
+
+}
+    async function logout(req, res) {
+    try {
+        res.clearCookie('token', {
+            httpOnly: true,
+            sameSite: 'strict'
+        });
+
+        return res.status(200).json({ 
+            message: "Successful Logout. Token cleared." 
+        });
+        
+    } catch (error) {
+        console.error("Logout Error:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 module.exports = {
     register,
     getUsers,
     login,
-    verifyEmail
+    verifyEmail,
+    logout
 };
