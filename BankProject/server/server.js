@@ -3,11 +3,14 @@ const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
 app.use(express.json()); //MIDDLEWARE
 app.use(helmet()); 
+app.use(cookieParser()); //to nove the cookies inside the middleware to access tokens
+
 
 const port = process.env.PORT || 3000;
 const jwtSecret = process.env.JWT_SECRET;

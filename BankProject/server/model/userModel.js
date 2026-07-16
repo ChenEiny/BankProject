@@ -32,6 +32,18 @@ class UserModel {
         const { rows } = await db.query(queryText);
         return rows;
     }
+
+    static async verifyUser(userId) 
+    {
+    const queryText = `
+        UPDATE users 
+        SET is_verified = TRUE 
+        WHERE id = $1 
+        RETURNING id, email, is_verified;
+    `;
+    const { rows } = await db.query(queryText, [userId]);
+    return rows[0];
+}
 }
 
 module.exports = UserModel;

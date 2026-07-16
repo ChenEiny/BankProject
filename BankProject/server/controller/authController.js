@@ -2,9 +2,20 @@ const UserModel = require('../model/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Account = require('../model/accountModel');
+const nodemailer = require('nodemailer');//for verification purposes
+
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS 
+  }
+});
 
 async function register(req, res) 
 {
+
     const { email, password, phone } = req.body;
 
     if (!email || !password || !phone) 
@@ -32,7 +43,8 @@ async function register(req, res)
     try 
     {
         const userExists = await UserModel.findByEmail(email);
-        if (userExists) {
+        if (userExists) 
+        {
             return res.status(409).json({ error: "Email already registered" });
         }
 
@@ -44,6 +56,38 @@ async function register(req, res)
         });
 
         const newAccount = await Account.create(newUser.id);
+
+        // Generate a verification token that expires in 15 minutes
+        //--------------------------------------------------------------
+        const verificationToken = jwt.sign(
+            { userId: newUser.id }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '15m' }
+        );
+
+
+        const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${verificationToken}`;
+
+        const mailOptions = {
+            from: `"Safe Bank" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Verify Your Bank Account',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px; max-width: 500px; margin: auto;">
+                    <h2 style="color: #4c4caf;">Welcome to Safe Bank!</h2>
+                    <p>Thank you for signing up. Please click the button below to verify your email and complete your registration:</p>
+                    <div style="text-align: center; margin: 25px 0;">
+                        <a href="${verificationLink}" style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify My Account</a>
+                    </div>
+                    <p style="color: #ff0000; font-size: 12px; text-align: center;">This link will expire in 15 minutes.</p>
+                </div>
+            `            
+        };
+
+
+
+        await transporter.sendMail(mailOptions);
+        //-----------------------------------------------------------------------------
 
         return res.status(201).json({
             message: "Success Signup",
@@ -75,6 +119,13 @@ async function getUsers(req, res)
 
 async function login(req, res) 
 {
+    if (!req.body) 
+    {
+        return res.status(400).json({ 
+            message: "Request body is missing. Make sure Content-Type is set to application/json." 
+        });
+    }
+    
     const { email, password } = req.body;
 
     if (!email || !password) 
@@ -126,8 +177,49 @@ async function login(req, res)
     }
 }
 
+async function verifyEmail(req, res) {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).send('<h1>Verification token is missing.</h1>');
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const updatedUser = await UserModel.verifyUser(decoded.userId);
+
+        if (!updatedUser) {
+            return res.status(404).send('<h1>User not found.</h1>');
+        }
+
+        const sessionToken = jwt.sign(
+            { 
+                id: updatedUser.id,       
+                userId: updatedUser.id   
+            }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '15m' } 
+        );
+
+        res.cookie('token', sessionToken, 
+        {
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', 
+            maxAge: 3600000 
+        });
+
+        return res.redirect('/api/dashboard/');
+
+    } catch (error) 
+    {
+        console.error('Verification error:', error);
+        return res.status(400).send('<h1>Verification link is invalid or has expired.</h1>');
+    }
+}
+
 module.exports = {
     register,
     getUsers,
-    login
+    login,
+    verifyEmail
 };

@@ -6,15 +6,18 @@ async function transfer(req, res)
     
     const senderUserId = req.user.id; 
 
-    if (!receiverEmail || amount === undefined) 
-    {
+    if (!receiverEmail || amount === undefined || amount === null) {
         return res.status(400).json({ error: "Missing required fields: receiverEmail and amount are required" });
     }
 
-    const transferAmount = parseFloat(amount);
-
-    if (isNaN(transferAmount) || transferAmount <= 0) 
+    if (typeof amount === 'object' || Array.isArray(amount) || typeof amount === 'boolean') 
     {
+        return res.status(400).json({ error: "Amount must be a valid number, not an array or object" });
+    }
+
+    const transferAmount = Number(amount);
+
+    if (isNaN(transferAmount) || transferAmount <= 0 || transferAmount <= 0.5) {
         return res.status(400).json({ error: "Amount must be a valid number greater than 0" });
     }
 
