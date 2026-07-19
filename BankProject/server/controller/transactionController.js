@@ -65,9 +65,10 @@ async function transfer(req, res)
     }
 }
 
-async function getHistory(req, res) {
+async function getHistory(req, res) 
+{
     try {
-        const history = await Transaction.getAll();
+        const history = await Transaction.getMyHistory(req.user.id);
         
         return res.status(200).json({
             message: "Transaction history retrieved successfully",

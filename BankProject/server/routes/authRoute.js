@@ -3,14 +3,32 @@ const router = express.Router();
 const authController = require('../controller/authController');
 const verifyToken = require('../middleware/authMiddleware');
 
-router.post('/login', authController.login);
+router.post('/login', (req, res, next) => {
+    let token = null;
+
+    if (req.cookies && req.cookies.token) 
+    {
+        token = req.cookies.token;
+    } 
+    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) 
+    {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') 
+    {
+        return res.status(400).json({ 
+            error: "You are already logged in. Please log out before logging into another account." 
+        });
+    }
+    
+    next();
+}, authController.login);
 
 router.post('/signup', authController.register);
+router.get('/users', authController.getUsers);
 
-router.get('/users', authController.getUsers);//temporary check for the user exists
-
-router.get('/me', verifyToken, (req, res) => 
-    {
+router.get('/me', verifyToken, (req, res) => {
     return res.status(200).json({
         message: "You are active and authenticated!",
         user: req.user
@@ -18,7 +36,6 @@ router.get('/me', verifyToken, (req, res) =>
 });
 
 router.get('/verify-email', authController.verifyEmail);
-
-router.post('/logout', authController.logout);
+router.post('/logout', verifyToken, authController.logout);
 
 module.exports = router;

@@ -21,9 +21,21 @@ function verifyToken(req, res, next)
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         req.user = verified; 
         next(); 
-       } catch (error) 
-       {
-        return res.status(400).json({ error: "Invalid token format or token expired." });
+    } catch (error) 
+    {
+        console.error("JWT Verification Error:", error.message);
+
+        if (error.name === 'TokenExpiredError') 
+        {
+            return res.status(401).json({ error: "Access denied. Token has expired." });
+        }
+
+        if (error.name === 'JsonWebTokenError') 
+        {
+            return res.status(401).json({ error: "Access denied. Invalid or malformed token." });
+        }
+
+        return res.status(401).json({ error: "Access denied. Authentication failed." });
     }
 }
 

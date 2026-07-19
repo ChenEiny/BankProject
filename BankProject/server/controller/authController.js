@@ -217,11 +217,12 @@ async function verifyEmail(req, res) {
     }
 
 }
-    async function logout(req, res) {
-    try {
+    async function logout(req, res) 
+    {
+    try 
+    {
         res.clearCookie('token', {
             httpOnly: true,
-            sameSite: 'strict'
         });
 
         return res.status(200).json({ 
