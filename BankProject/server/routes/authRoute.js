@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controller/authController');
 const verifyToken = require('../middleware/authMiddleware');
+const { safeController } = require('../middleware/errorWrapper'); // מייבאים את המעטפת
 
 router.post('/login', (req, res, next) => {
     let token = null;
@@ -23,10 +24,10 @@ router.post('/login', (req, res, next) => {
     }
     
     next();
-}, authController.login);
+}, safeController(authController.login)); // 👈 עטוף בבטחה
 
-router.post('/signup', authController.register);
-router.get('/users', authController.getUsers);
+router.post('/signup', safeController(authController.register)); // 👈 עטוף בבטחה
+router.get('/users', safeController(authController.getUsers));   // 👈 עטוף בבטחה
 
 router.get('/me', verifyToken, (req, res) => {
     return res.status(200).json({
@@ -35,7 +36,7 @@ router.get('/me', verifyToken, (req, res) => {
     });
 });
 
-router.get('/verify-email', authController.verifyEmail);
-router.post('/logout', verifyToken, authController.logout);
+router.get('/verify-email', safeController(authController.verifyEmail)); // 👈 עטוף בבטחה
+router.post('/logout', verifyToken, safeController(authController.logout)); // 👈 עטוף בבטחה
 
 module.exports = router;

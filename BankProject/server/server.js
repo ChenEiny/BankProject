@@ -57,19 +57,13 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/authRoute');
 const transactionRoutes = require('./routes/transactionRoute');
 const dashboardRoutes = require('./routes/dashboardRoute');
-
+const healthController =require('./controller/healthController');
 
 app.use('/api/transactions/', transactionRoutes);
 app.use('/api/auth/', /*authLimiter,*/ authRoutes);
 app.use('/api/dashboard/', dashboardRoutes);
+app.use('/api/health', healthController.checkHealth);
 
-
-app.use((req, res, next) => {
-    res.status(404).json({
-        error: "Not Found",
-        message: `Cannot ${req.method} ${req.originalUrl} - No such API`
-    });
-});
 
 //Server listener
 app.listen(port, () => {
