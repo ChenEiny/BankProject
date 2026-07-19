@@ -129,7 +129,7 @@ async function login(req, res)
     const { email, password } = req.body;
 
     if (!email || !password) 
-        {
+    {
         return res.status(400).json({ error: "Email and password are required" });
     }
 
@@ -140,15 +140,18 @@ async function login(req, res)
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        if (!user.is_verified) 
+        {
+            return res.status(403).json({ error: "Please verify your email before logging in." });
+        }
 
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) 
         {
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
-        const payload = 
-        {
+        const payload = {
             id: user.id,
             email: user.email,
             role: user.role
@@ -160,9 +163,14 @@ async function login(req, res)
             { expiresIn: '1h' }     
         );
 
+        res.cookie('token', token, {
+            httpOnly: true,                      
+            sameSite: 'lax',                     
+            maxAge: 60 * 60 * 1000               
+        });
+
         return res.status(200).json({
-            message: "Succesfull Login",
-            token: token, 
+            message: "Successful Login",
             user: {
                 id: user.id,
                 email: user.email,
@@ -201,11 +209,10 @@ async function verifyEmail(req, res) {
             { expiresIn: '15m' } 
         );
 
-        res.cookie('token', sessionToken, 
-        {
+        res.cookie('token', sessionToken, {
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production', 
-            maxAge: 3600000 
+            maxAge: 15 * 60 * 1000 
         });
 
         return res.redirect('/api/dashboard/');

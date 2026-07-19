@@ -7,7 +7,6 @@ const pool = new Pool({
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
 });
-
 async function initDatabase() {
     const createUsersTableQuery = `
         CREATE TABLE IF NOT EXISTS users (
@@ -16,6 +15,7 @@ async function initDatabase() {
             password VARCHAR(255) NOT NULL,
             phone VARCHAR(20) NOT NULL,
             role VARCHAR(50) DEFAULT 'customer',
+            is_verified BOOLEAN DEFAULT FALSE, 
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     `;
@@ -32,7 +32,7 @@ pool.query('SELECT NOW()', async (err, res) => {
         console.error('❌ Database connection failed:', err.stack);
     } else {
         console.log('✅ Connected to PostgreSQL successfully');
-        await initDatabase(); // מריץ את יצירת הטבלה מיד לאחר חיבור מוצלח
+        await initDatabase(); 
     }
 });
 
