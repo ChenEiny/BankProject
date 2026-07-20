@@ -24,10 +24,10 @@ router.post('/login', (req, res, next) => {
     }
     
     next();
-}, safeController(authController.login)); // 👈 עטוף בבטחה
+}, safeController(authController.login));
 
-router.post('/signup', safeController(authController.register)); // 👈 עטוף בבטחה
-router.get('/users', safeController(authController.getUsers));   // 👈 עטוף בבטחה
+router.post('/signup', safeController(authController.register));
+router.get('/users', safeController(authController.getUsers));  
 
 router.get('/me', verifyToken, (req, res) => {
     return res.status(200).json({
@@ -36,7 +36,7 @@ router.get('/me', verifyToken, (req, res) => {
     });
 });
 
-router.get('/verify-email', safeController(authController.verifyEmail)); // 👈 עטוף בבטחה
-router.post('/logout', verifyToken, safeController(authController.logout)); // 👈 עטוף בבטחה
+router.get('/verify-email', safeController(authController.verifyEmail));
+router.post('/logout', verifyToken, safeController(authController.logout));
 
 module.exports = router;

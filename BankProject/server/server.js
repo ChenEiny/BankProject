@@ -57,12 +57,12 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/authRoute');
 const transactionRoutes = require('./routes/transactionRoute');
 const dashboardRoutes = require('./routes/dashboardRoute');
-const healthController =require('./controller/healthController');
+const healthRoute =require('./routes/healthRoute');
 
 app.use('/api/transactions/', transactionRoutes);
 app.use('/api/auth/', /*authLimiter,*/ authRoutes);
 app.use('/api/dashboard/', dashboardRoutes);
-app.use('/api/health', healthController.checkHealth);
+app.use('/api/health', healthRoute);
 
 
 //Server listener

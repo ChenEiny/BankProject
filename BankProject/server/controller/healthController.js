@@ -2,15 +2,15 @@
 const db = require('../config/db'); 
 const transporter = require('../config/mailer');
 
-async function checkHealth(req, res) {
-    const healthInfo = {
+async function checkHealth(req, res) 
+{
+    const healthInfo = 
+    {
         status: "UP",
         timestamp: new Date().toISOString(),
-        // הוספת נתוני השרת עצמו:
         server: "healthy", 
-        uptime: `${Math.floor(process.uptime())}s`, // כמה שניות השרת רץ ברצף
         memoryUsage: {
-            heapUsedMB: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB` // צריכת זיכרון נוכחית
+            heapUsedMB: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB` 
         },
         services: {
             database: "unknown",
@@ -18,7 +18,8 @@ async function checkHealth(req, res) {
         }
     };
 
-    try {
+    try 
+    {
         await Promise.all([
             db.query('SELECT 1')
                 .then(() => { healthInfo.services.database = "healthy"; })
