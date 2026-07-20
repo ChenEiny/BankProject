@@ -16,12 +16,11 @@ const port = process.env.PORT || 3000;
 const jwtSecret = process.env.JWT_SECRET;
 
 
-//Used only when the fronend is setup
-// app.use(cors({
-//     origin: 'http://localhost:5173', 
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-//     credentials: true 
-// }));
+ app.use(cors({
+     origin: 'http://localhost:5173', 
+     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+     credentials: true 
+ }));
 
 // const generalLimiter = rateLimit({
 //     windowMs: 15 * 60 * 1000, 
