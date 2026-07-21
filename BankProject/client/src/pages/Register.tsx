@@ -14,7 +14,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/register', formData);
+      const res = await api.post('/auth/signup', formData);
       setStatus({ type: 'success', msg: `${res.data.message || 'Registration successful'}. Please check your email.` });
       setFormData({ email: '', phone: '', password: '' });
     } catch (err) {

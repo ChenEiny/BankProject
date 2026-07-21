@@ -24,14 +24,13 @@ export const authService = {
         errorText = responseData.error || responseData.message || '';
       }
 
-      // בדיקה מקיפה שאינה תלויה באותיות קטנות/גדולות
       const lowerError = errorText.toLowerCase();
       if (lowerError.includes('already logged in') || lowerError.includes('log out before logging')) {
         const userObj = typeof responseData === 'object' ? responseData?.user : undefined;
         return { user: userObj };
       }
 
-      throw new Error(errorText || 'Login failed. Please check your credentials.');
+      throw new Error(errorText || axiosError.message);
     }
   },
 

@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Account = require('../model/accountModel');
 const transporter = require('../config/mailer');
 const { AppError } = require('../middleware/errorWrapper.js');
+const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
 async function register(req) 
 {
@@ -161,7 +162,7 @@ async function verifyEmail(req, res)
             maxAge: 15 * 60 * 1000 
         });
 
-        return res.redirect('/api/dashboard/');
+        res.redirect(`${clientUrl}/dashboard`);
     } catch (error) 
     {
         throw new AppError('<h1>Verification link is invalid or has expired.</h1>', 400);

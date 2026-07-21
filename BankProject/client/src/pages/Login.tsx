@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { authService } from '../api/authService';
 import api from '../api/axios';
 import { User } from '../types';
+import AuthLayout from '../components/layout/AuthLayout';
 
 interface LoginProps {
   onLoginSuccess: (user: User) => void;
@@ -11,24 +13,23 @@ interface LoginProps {
 export default function Login({ onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // בדיקה בטעינת הקומפוננטה: אם המשתמש כבר מחובר - מעבירים אותו ישר ל-Dashboard!
   useEffect(() => {
     let isMounted = true;
 
     const checkExistingAuth = async () => {
       try {
-        // קריאה קלה לשרת לבדוק אם אנחנו authenticated (למשל מול me / health / verify)
         const res = await api.get('/auth/me'); 
         if (isMounted && res.data?.user) {
           onLoginSuccess(res.data.user);
           navigate('/dashboard', { replace: true });
         }
       } catch {
-        // אם החזיר 401/404 - המשתמש באמת לא מחובר, נשארים במסך ה-Login
+        // Not authenticated
       }
     };
 
@@ -46,17 +47,15 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     try {
       const result = await authService.login({ email, password });
-      
       if (result.user) {
         onLoginSuccess(result.user);
       }
-      
       navigate('/dashboard');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Login failed.');
+        setError('Login failed. Please check your credentials.');
       }
     } finally {
       setLoading(false);
@@ -64,39 +63,83 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   };
 
   return (
-    <div style={styles.card}>
-      <h2>Bank Login</h2>
-      {error && <div style={styles.error}>{error}</div>}
-      
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input 
-          type="email" 
-          placeholder="Email Address" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-          required 
-        />
-        <input 
-          type="password" 
-          placeholder="Password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
+    <AuthLayout 
+      title="SafeBank Portal" 
+      subtitle="Enter your credentials to access your account"
+    >
+      {/* Error Alert */}
+      {error && (
+        <div className="error-alert">
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="auth-form">
+        
+        {/* Email Input */}
+        <div className="input-group">
+          <label>Email Address</label>
+          <div className="input-wrapper">
+            <Mail size={18} className="input-icon" />
+            <input 
+              type="email" 
+              placeholder="name@example.com" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+            />
+          </div>
+        </div>
+
+        {/* Password Input */}
+        <div className="input-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label>Password</label>
+            <a href="#forgot" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}>
+              Forgot?
+            </a>
+          </div>
+          <div className="input-wrapper">
+            <Lock size={18} className="input-icon" />
+            <input 
+              type={showPassword ? 'text' : 'password'} 
+              placeholder="••••••••" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)}
+              className="eye-btn"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <button type="submit" disabled={loading} className="submit-btn">
+          {loading ? (
+            <>
+              <Loader2 size={18} className="spinner" /> Securely Logging in...
+            </>
+          ) : (
+            'Sign In to Account'
+          )}
         </button>
       </form>
 
-      <p style={{ marginTop: '15px' }}>
-        Don't have an account? <Link to="/register">Register here</Link>
-      </p>
-    </div>
+      {/* Footer Link */}
+      <div className="auth-footer">
+        <p>
+          Don't have an account?{' '}
+          <Link to="/register">
+            Open an Account
+          </Link>
+        </p>
+      </div>
+    </AuthLayout>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  card: { maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '10px' },
-  error: { color: 'red', marginBottom: '10px', fontWeight: 'bold' }
-};

@@ -1,7 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
+import { 
+  CreditCard, 
+  Send, 
+  History, 
+  Clock, 
+  Loader2, 
+  AlertCircle, 
+  CheckCircle2,
+  User,
+  Mail,
+  Phone,
+  ArrowUpRight,
+  ArrowDownLeft
+} from 'lucide-react';
 import api from '../api/axios';
 import { Account, Transaction } from '../types';
+import BankCard from '../components/common/BankCard';
 
 export default function Dashboard() {
   const [account, setAccount] = useState<Account | null>(null);
@@ -43,9 +58,9 @@ export default function Dashboard() {
       }
 
     } catch (err) {
-      const axiosError = err as AxiosError<{ error?: string }>;
+      const axiosError = err as AxiosError<{ error?: string; message?: string }>;
       console.error('Failed to load dashboard:', axiosError);
-      setError(axiosError.response?.data?.error || 'Failed to fetch dashboard data.');
+      setError(axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to fetch dashboard data.');
     } finally {
       setLoading(false);
     }
@@ -74,127 +89,182 @@ export default function Dashboard() {
       
       fetchDashboardData();
     } catch (err) {
-      const axiosError = err as AxiosError<{ error?: string }>;
+      const axiosError = err as AxiosError<{ error?: string; message?: string }>;
+      const serverMsg = axiosError.response?.data?.error || axiosError.response?.data?.message;
+
       setTransferStatus({ 
         type: 'error', 
-        msg: axiosError.response?.data?.error || 'Transfer failed.' 
+        msg: serverMsg || 'Transfer failed. Please check the recipient details.' 
       });
     } finally {
       setTransferring(false);
     }
   };
 
-  if (loading) return <h3 style={{ textAlign: 'center', marginTop: '50px' }}>Loading Dashboard...</h3>;
-  if (error) return <div style={{ color: 'red', textAlign: 'center', marginTop: '50px' }}>{error}</div>;
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <Loader2 className="spinner" size={36} />
+        <p>Loading your financial portfolio...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-error">
+        <AlertCircle size={32} />
+        <p>{error}</p>
+        <button onClick={fetchDashboardData} className="submit-btn" style={{ maxWidth: '200px' }}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   const lastTransaction = history.length > 0 ? history[0] : null;
-
-  // בדיקה דינמית: האם המשתמש המחובר כרגע הוא השולח?
   const isSender = account && lastTransaction 
     ? (lastTransaction.sender_email || lastTransaction.sender_email) === account.email 
     : false;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Bank Dashboard</h1>
+    <div className="dashboard-container">
+      
+      {/* גריד של כרטיס יתרה + כרטיס העברה */}
+      <div className="dashboard-grid">
+        
+        {/* 1. כרטיס נתוני חשבון ויתרה */}
+        {account && (
+          <BankCard 
+            title="Account Overview" 
+            subtitle="Current Balance & Details"
+            icon={<CreditCard size={22} />}
+          >
+            <h1 className="balance-amount">
+              ${Number(account.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </h1>
 
-      {/* 1. כרטיס נתוני חשבון ויתרה */}
-      {account && (
-        <div style={{ background: '#2a2a2a', color: '#fff', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-          <h3>Account Overview</h3>
-          <p><strong>Account ID:</strong> {account.accountId}</p>
-          <p><strong>Email:</strong> {account.email}</p>
-          <p><strong>Phone:</strong> {account.phone}</p>
-          <h2 style={{ color: '#4caf50', marginTop: '10px' }}>
-            Balance: ${Number(account.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </h2>
-        </div>
-      )}
-
-      {/* 2. תצוגת העברה אחרונה - דינמית לפי שולח/מקבל */}
-      {lastTransaction && account && (
-        <div style={{ background: '#1e3a1e', borderLeft: '5px solid #4caf50', color: '#fff', padding: '15px', borderRadius: '4px', marginBottom: '20px' }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#81c784' }}>Last Transaction</h4>
-          <p style={{ margin: 0 }}>
-            {isSender ? (
-              <>
-                Sent <strong>${Number(lastTransaction.amount || 0).toFixed(2)}</strong> to <strong>{lastTransaction.receiver_email || lastTransaction.receiver_email}</strong>
-              </>
-            ) : (
-              <>
-                Received <strong>${Number(lastTransaction.amount || 0).toFixed(2)}</strong> from <strong>{lastTransaction.sender_email || lastTransaction.receiver_email}</strong>
-              </>
-            )}
-            {' '}on {new Date(lastTransaction.created_at || Date.now()).toLocaleDateString()}
-          </p>
-        </div>
-      )}
-
-      {/* 3. טופס העברת כספים */}
-      <div style={{ border: '1px solid #444', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-        <h3>Transfer Money</h3>
-        {transferStatus.msg && (
-          <p style={{ color: transferStatus.type === 'error' ? '#ff6b6b' : '#51cf66', fontWeight: 'bold' }}>
-            {transferStatus.msg}
-          </p>
+            <div className="account-details-pills">
+              <div className="pill"><User size={14} /> ID: {account.accountId}</div>
+              <div className="pill"><Mail size={14} /> {account.email}</div>
+              <div className="pill"><Phone size={14} /> {account.phone}</div>
+            </div>
+          </BankCard>
         )}
-        <form onSubmit={handleTransfer} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <input 
-            type="email" 
-            placeholder="Receiver Email" 
-            value={transfer.receiverEmail} 
-            onChange={(e) => setTransfer({ ...transfer, receiverEmail: e.target.value })} 
-            required 
-            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #555' }}
-          />
-          <input 
-            type="number" 
-            step="0.01" 
-            min="0.01"
-            placeholder="Amount" 
-            value={transfer.amount} 
-            onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })} 
-            required 
-            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #555' }}
-          />
-          <button type="submit" disabled={transferring} style={{ padding: '8px 16px', cursor: 'pointer' }}>
-            {transferring ? 'Processing...' : 'Send Transfer'}
-          </button>
-        </form>
+
+        {/* 2. כרטיס טופס העברת כספים */}
+        <BankCard 
+          title="Transfer Money" 
+          subtitle="Instant Direct Transfer"
+          icon={<Send size={20} />}
+        >
+          {transferStatus.msg && (
+            <div className={`status-badge ${transferStatus.type}`}>
+              {transferStatus.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+              <span>{transferStatus.msg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleTransfer} className="transfer-form">
+            <div className="input-group">
+              <input 
+                type="email" 
+                placeholder="Receiver Email" 
+                value={transfer.receiverEmail} 
+                onChange={(e) => setTransfer({ ...transfer, receiverEmail: e.target.value })} 
+                required 
+              />
+            </div>
+
+            <div className="flex-row">
+              <input 
+                type="number" 
+                step="0.01" 
+                min="0.01"
+                placeholder="Amount ($)" 
+                value={transfer.amount} 
+                onChange={(e) => setTransfer({ ...transfer, amount: e.target.value })} 
+                required 
+              />
+              <button type="submit" disabled={transferring} className="send-btn">
+                {transferring ? <Loader2 size={18} className="spinner" /> : 'Send Transfer'}
+              </button>
+            </div>
+          </form>
+        </BankCard>
+
       </div>
+
+      {/* 3. תצוגת העברה אחרונה */}
+      {lastTransaction && account && (
+        <div className="last-transaction-widget">
+          <div className="widget-icon">
+            <Clock size={20} />
+          </div>
+          <div className="widget-content">
+            <span className="widget-title">Last Activity</span>
+            <p>
+              {isSender ? (
+                <>
+                  Sent <span className="highlight-out">-${Number(lastTransaction.amount || 0).toFixed(2)}</span> to <strong>{lastTransaction.receiver_email}</strong>
+                </>
+              ) : (
+                <>
+                  Received <span className="highlight-in">+${Number(lastTransaction.amount || 0).toFixed(2)}</span> from <strong>{lastTransaction.sender_email}</strong>
+                </>
+              )}
+              {' '}on {new Date(lastTransaction.created_at || Date.now()).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 4. היסטוריית פעולות */}
-      <div>
-        <h3>Transaction History</h3>
+      <BankCard 
+        title="Transaction History" 
+        subtitle="Recent Financial Records"
+        icon={<History size={20} />}
+      >
         {history.length === 0 ? (
-          <p>No transactions recorded yet.</p>
+          <p style={{ color: '#94a3b8', margin: 0 }}>No transactions recorded yet.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #555' }}>
-                <th style={{ padding: '8px' }}>Date</th>
-                <th style={{ padding: '8px' }}>Sender</th>
-                <th style={{ padding: '8px' }}>Receiver</th>
-                <th style={{ padding: '8px' }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((tx, idx) => (
-                <tr key={tx.id || idx} style={{ borderBottom: '1px solid #333' }}>
-                  <td style={{ padding: '8px' }}>
-                    {new Date(tx.created_at || Date.now()).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: '8px' }}>{tx.sender_email || tx.sender_email || 'N/A'}</td>
-                  <td style={{ padding: '8px' }}>{tx.receiver_email || tx.receiver_email || 'N/A'}</td>
-                  <td style={{ padding: '8px', fontWeight: 'bold' }}>
-                    ${Number(tx.amount || 0).toFixed(2)}
-                  </td>
+          <div className="table-responsive">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Sender</th>
+                  <th>Receiver</th>
+                  <th className="text-right">Amount</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {history.map((tx, idx) => {
+                  const txIsSender = account?.email === tx.sender_email;
+                  return (
+                    <tr key={tx.id || idx}>
+                      <td>
+                        <span className={`tx-type-pill ${txIsSender ? 'out' : 'in'}`}>
+                          {txIsSender ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
+                          {txIsSender ? 'Sent' : 'Received'}
+                        </span>
+                      </td>
+                      <td>{new Date(tx.created_at || Date.now()).toLocaleDateString()}</td>
+                      <td>{tx.sender_email || 'N/A'}</td>
+                      <td>{tx.receiver_email || 'N/A'}</td>
+                      <td className={`text-right font-bold ${txIsSender ? 'text-danger' : 'text-success'}`}>
+                        {txIsSender ? '-' : '+'}${Number(tx.amount || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </BankCard>
+
     </div>
   );
 }
