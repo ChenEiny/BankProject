@@ -9,11 +9,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/layout/Navbar';
 import api from './api/axios';
 
-export default function App() {
+export default function App() 
+{
   const [user, setUser] = useState<User | null>(null);
 
-  const handleLogout = async () => {
-    try {
+  const handleLogout = async () => 
+    {
+    try 
+    {
       await api.post('/auth/logout');
     } catch (err) {
       console.error('Logout error:', err);
@@ -24,7 +27,6 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {/* Navbar גלובלי */}
       <Navbar user={user} onLogout={handleLogout} />
 
       <main className="main-content">
@@ -33,7 +35,6 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           
-          {/* Dashboard ללא ה-prop user */}
           <Route 
             path="/dashboard" 
             element={
@@ -43,7 +44,6 @@ export default function App() {
             } 
           />
 
-          {/* הפנייה של כל נתיב לא מוכר ל-Login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>

@@ -10,7 +10,8 @@ interface LoginProps {
   onLoginSuccess: (user: User) => void;
 }
 
-export default function Login({ onLoginSuccess }: LoginProps) {
+export default function Login({ onLoginSuccess }: LoginProps) 
+{
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,12 +36,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     checkExistingAuth();
 
-    return () => {
+    return () => 
+    {
       isMounted = false;
     };
   }, [navigate, onLoginSuccess]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => 
+  {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -51,10 +54,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         onLoginSuccess(result.user);
       }
       navigate('/dashboard');
-    } catch (err: unknown) {
-      if (err instanceof Error) {
+    } catch (err: unknown) 
+    {
+      if (err instanceof Error) 
+      {
         setError(err.message);
-      } else {
+      } else 
+      {
         setError('Login failed. Please check your credentials.');
       }
     } finally {
@@ -67,7 +73,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       title="SafeBank Portal" 
       subtitle="Enter your credentials to access your account"
     >
-      {/* Error Alert */}
       {error && (
         <div className="error-alert">
           <span>{error}</span>
@@ -77,7 +82,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       {/* Form */}
       <form onSubmit={handleSubmit} className="auth-form">
         
-        {/* Email Input */}
         <div className="input-group">
           <label>Email Address</label>
           <div className="input-wrapper">
@@ -92,13 +96,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           </div>
         </div>
 
-        {/* Password Input */}
         <div className="input-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label>Password</label>
-            <a href="#forgot" style={{ fontSize: '12px', color: '#3b82f6', textDecoration: 'none' }}>
-              Forgot?
-            </a>
+
           </div>
           <div className="input-wrapper">
             <Lock size={18} className="input-icon" />
@@ -131,7 +132,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         </button>
       </form>
 
-      {/* Footer Link */}
       <div className="auth-footer">
         <p>
           Don't have an account?{' '}

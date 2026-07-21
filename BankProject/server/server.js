@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
+const { globalErrorHandler } = require('./middleware/errorWrapper'); 
+
 const app = express();
 
 app.use(express.json()); //MIDDLEWARE
@@ -62,7 +64,7 @@ app.use('/api/transactions/', transactionRoutes);
 app.use('/api/auth/', /*authLimiter,*/ authRoutes);
 app.use('/api/dashboard/', dashboardRoutes);
 app.use('/api/health', healthRoute);
-
+app.use(globalErrorHandler);
 
 //Server listener
 app.listen(port, () => {

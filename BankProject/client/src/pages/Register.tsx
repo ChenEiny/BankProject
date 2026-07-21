@@ -13,11 +13,13 @@ export default function Register() {
     setStatus({ type: '', msg: '' });
     setLoading(true);
 
-    try {
+    try 
+    {
       const res = await api.post('/auth/signup', formData);
       setStatus({ type: 'success', msg: `${res.data.message || 'Registration successful'}. Please check your email.` });
       setFormData({ email: '', phone: '', password: '' });
-    } catch (err) {
+    } catch (err) 
+    {
       const axiosError = err as AxiosError<{ error?: string }>;
       setStatus({ type: 'error', msg: axiosError.response?.data?.error || 'Registration failed.' });
     } finally {

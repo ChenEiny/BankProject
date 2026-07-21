@@ -7,7 +7,8 @@ interface NavbarProps {
   onLogout?: () => void;
 }
 
-export default function Navbar({ user, onLogout }: NavbarProps) {
+export default function Navbar({ user, onLogout }: NavbarProps) 
+{
   return (
     <nav className="main-navbar">
       <div className="nav-container">
