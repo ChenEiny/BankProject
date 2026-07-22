@@ -7,6 +7,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/layout/Navbar';
+import { ChatBot } from './components/ChatBot'; // 1. ייבוא הקומפוננטה
 import api from './api/axios';
 
 export default function App() 
@@ -28,6 +29,8 @@ export default function App()
   return (
     <BrowserRouter>
       <Navbar user={user} onLogout={handleLogout} />
+
+      {user && <ChatBot />}
 
       <main className="main-content">
         <Routes>

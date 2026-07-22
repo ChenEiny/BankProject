@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const chatRoutes = require('./routes/chatRoute');
 
 const { globalErrorHandler } = require('./middleware/errorWrapper'); 
 
@@ -64,6 +65,9 @@ app.use('/api/transactions/', transactionRoutes);
 app.use('/api/auth/', /*authLimiter,*/ authRoutes);
 app.use('/api/dashboard/', dashboardRoutes);
 app.use('/api/health', healthRoute);
+app.use('/api/chat', chatRoutes);
+
+
 app.use(globalErrorHandler);
 
 //Server listener
