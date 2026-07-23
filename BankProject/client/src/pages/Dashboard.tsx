@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { AxiosError } from 'axios';
 import { 
   CreditCard, 
@@ -12,11 +12,14 @@ import {
   Mail,
   Phone,
   ArrowUpRight,
-  ArrowDownLeft
+  ArrowDownLeft,
+  Bell
 } from 'lucide-react';
 import api from '../api/axios';
 import { Account, Transaction } from '../types';
 import BankCard from '../components/common/BankCard';
+import { useSocket } from '../context/SocketContext';
+import { TransferNotification } from '../types/socket';
 
 export default function Dashboard() {
   const [account, setAccount] = useState<Account | null>(null);
@@ -24,15 +27,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // התראות בזמן אמת מה-Socket
+  const [realtimeNotification, setRealtimeNotification] = useState<TransferNotification | null>(null);
+
   // טופס העברה
   const [transfer, setTransfer] = useState({ receiverEmail: '', amount: '' });
   const [transferStatus, setTransferStatus] = useState({ type: '', msg: '' });
   const [transferring, setTransferring] = useState(false);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setError('');
-      setLoading(true);
 
       // 1. טעינת נתוני החשבון
       const dashRes = await api.get('/dashboard');
@@ -64,11 +69,19 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
+
+  // 🔔 חיבור ה-Socket: קבלת התראה בזמן אמת + רענון נתונים אוטומטי
+  useSocket(
+    useCallback((data: TransferNotification) => {
+      setRealtimeNotification(data);
+      fetchDashboardData(); // רענון היתרה וההיסטוריה מיידית ללא רענון עמוד
+    }, [fetchDashboardData])
+  );
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +142,24 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
+
+      {/* 🔔 באנר התראה בזמן אמת (Real-Time Live Toast/Banner) */}
+      {realtimeNotification && (
+        <div className="status-badge success" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Bell size={18} className="animate-bounce" />
+            <span>
+              <strong>Instant Alert:</strong> Received <strong>${realtimeNotification.amount.toFixed(2)}</strong> from {realtimeNotification.senderEmail}!
+            </span>
+          </div>
+          <button 
+            onClick={() => setRealtimeNotification(null)}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       
       {/* גריד של כרטיס יתרה + כרטיס העברה */}
       <div className="dashboard-grid">

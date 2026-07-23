@@ -5,15 +5,19 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const chatRoutes = require('./routes/chatRoute');
+const http = require('http');
+const { initSocket } = require('./socket');
 
 const { globalErrorHandler } = require('./middleware/errorWrapper'); 
 
 const app = express();
+const server = http.createServer(app);
 
 app.use(express.json()); //MIDDLEWARE
 app.use(helmet()); 
 app.use(cookieParser()); //to nove the cookies inside the middleware to access tokens
 
+initSocket(server);
 
 const port = process.env.PORT || 3000;
 const jwtSecret = process.env.JWT_SECRET;

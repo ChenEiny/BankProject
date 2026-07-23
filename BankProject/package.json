@@ -28,7 +28,8 @@
     "nodemailer": "^9.0.3",
     "openai": "^6.48.0",
     "pg": "^8.22.0",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
