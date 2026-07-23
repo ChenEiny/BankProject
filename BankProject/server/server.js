@@ -75,6 +75,6 @@ app.use('/api/chat', chatRoutes);
 app.use(globalErrorHandler);
 
 //Server listener
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });

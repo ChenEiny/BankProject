@@ -1,4 +1,3 @@
-// controller/transactionController.js
 const Transaction = require('../model/transactionModel');
 const { AppError } = require('../middleware/errorWrapper.js');
 const { sendNotification } = require('../socket');
@@ -29,13 +28,13 @@ async function transfer(req)
     try {
         const result = await Transaction.transferMoney(senderUserId, receiverEmail, transferAmount);
 
-        if (result.receiver && result.receiver.id) 
-            {
-            sendNotification(result.receiver.id, 'TRANSFER_RECEIVED', {
+        if (result.receiver && result.receiver.email) 
+        {
+            sendNotification(result.receiver.email, 'TRANSFER_RECEIVED', {
                 transactionId: result.transactionId,
                 amount: result.amount,
                 senderEmail: result.sender.email,
-                timestamp: new Date()
+                timestamp: new Date().toISOString() 
             });
         }
 

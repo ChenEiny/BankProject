@@ -4,17 +4,16 @@ import { ServerToClientEvents, ClientToServerEvents, TransferNotification } from
 
 export const useSocket = (onTransferReceived?: (data: TransferNotification) => void) => {
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
+  const callbackRef = useRef(onTransferReceived);
 
   useEffect(() => {
-    // אם ה-JWT אצלך שמור ב-Cookie (כפי שרואים מ-cookieParser בשרת), 
-    // Socket.io מעביר cookies אוטומטית אם withCredentials מוגדר true.
-    // אם ה-Token שמור ב-localStorage/Auth Context, ניתן לשלוף אותו כאן:
-    const token = localStorage.getItem('token'); 
+    callbackRef.current = onTransferReceived;
+  }, [onTransferReceived]);
 
+  useEffect(() => {
     socketRef.current = io('http://localhost:3000', {
-      auth: { token },
-      withCredentials: true,
-      transports: ['websocket', 'polling']
+      withCredentials: true, 
+      transports: ['polling', 'websocket']
     });
 
     const socket = socketRef.current;
@@ -25,8 +24,8 @@ export const useSocket = (onTransferReceived?: (data: TransferNotification) => v
 
     socket.on('TRANSFER_RECEIVED', (data: TransferNotification) => {
       console.log('🔔 Money transfer received:', data);
-      if (onTransferReceived) {
-        onTransferReceived(data);
+      if (callbackRef.current) {
+        callbackRef.current(data);
       }
     });
 
@@ -37,7 +36,7 @@ export const useSocket = (onTransferReceived?: (data: TransferNotification) => v
     return () => {
       socket.disconnect();
     };
-  }, [onTransferReceived]);
+  }, []); 
 
   return socketRef.current;
 };
