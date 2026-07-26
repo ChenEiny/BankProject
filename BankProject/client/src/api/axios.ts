@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 const api: AxiosInstance = axios.create({
   baseURL: 'http://localhost:3000/api',
-  withCredentials: true, // מצרף אוטומטית את ה-HTTP-Only Cookie
+  withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
   },

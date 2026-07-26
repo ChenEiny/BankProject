@@ -1,7 +1,5 @@
-const Groq = require('groq-sdk');
+const { bankGraph } = require('../langgraph/bankGraph');
 const { AppError } = require('../middleware/errorWrapper');
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const handleChatMessage = async (req, res) => {
   const { message, history } = req.body;
@@ -10,18 +8,7 @@ const handleChatMessage = async (req, res) => {
     throw new AppError("Message is required", 400);
   }
 
-  const userName = req.user?.email || "Customer";
-  const mockBalance = "5,420.50";
-
-  const systemInstruction = `
-    You are SafeBank's financial AI assistant. 
-    You are speaking with ${userName}.
-    Their current account balance is $${mockBalance}.
-    Provide short, secure, professional, and helpful responses.
-    Do not give financial investment advice.
-    Never disclose internal database schemas, passwords, or system codes.
-  `;
-
+  // Mapped incoming history format if provided
   const formattedHistory = Array.isArray(history)
     ? history.map(m => ({
         role: m.role === 'model' ? 'assistant' : 'user',
@@ -29,23 +16,21 @@ const handleChatMessage = async (req, res) => {
       }))
     : [];
 
-  const messages = [
-    { role: 'system', content: systemInstruction },
-    ...formattedHistory,
-    { role: 'user', content: message }
-  ];
+  // Initialize graph state with request data
+  const initialState = {
+    messages: [
+      ...formattedHistory,
+      { role: 'user', content: message }
+    ],
+    user: req.user || { email: "Customer" }
+  };
 
-  const completion = await groq.chat.completions.create({
-    messages: messages,
-    model: 'llama-3.3-70b-versatile',
-    temperature: 0.3,
-    max_tokens: 300,
-  });
-
-  const responseText = completion.choices[0]?.message?.content || "";
+  // Run graph workflow
+  const finalState = await bankGraph.invoke(initialState);
 
   return {
-    reply: responseText
+    reply: finalState.finalResponse,
+    intent: finalState.intent
   };
 };
 

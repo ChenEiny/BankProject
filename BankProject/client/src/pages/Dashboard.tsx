@@ -27,10 +27,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // התראות בזמן אמת מה-Socket
   const [realtimeNotification, setRealtimeNotification] = useState<TransferNotification | null>(null);
 
-  // טופס העברה
   const [transfer, setTransfer] = useState({ receiverEmail: '', amount: '' });
   const [transferStatus, setTransferStatus] = useState({ type: '', msg: '' });
   const [transferring, setTransferring] = useState(false);
@@ -39,7 +37,6 @@ export default function Dashboard() {
     try {
       setError('');
 
-      // 1. טעינת נתוני החשבון
       const dashRes = await api.get('/dashboard');
       const rawAccount = dashRes.data?.data?.account || dashRes.data?.account || dashRes.data?.data || dashRes.data;
       
@@ -52,7 +49,6 @@ export default function Dashboard() {
         });
       }
 
-      // 2. טעינת היסטוריית העסקאות
       try {
         const historyRes = await api.get('/transactions/history');
         const txList = historyRes.data?.transactions || historyRes.data?.data?.transactions || historyRes.data?.data || (Array.isArray(historyRes.data) ? historyRes.data : []);
@@ -75,11 +71,11 @@ export default function Dashboard() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // 🔔 חיבור ה-Socket: קבלת התראה בזמן אמת + רענון נתונים אוטומטי
+  // 🔔 Real time socket connect
   useSocket(
     useCallback((data: TransferNotification) => {
       setRealtimeNotification(data);
-      fetchDashboardData(); // רענון היתרה וההיסטוריה מיידית ללא רענון עמוד
+      fetchDashboardData(); 
     }, [fetchDashboardData])
   );
 

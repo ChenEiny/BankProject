@@ -13,7 +13,6 @@ export const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // גלילה אוטומטית לסוף השרשור בכל הודעה חדשה
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -25,7 +24,6 @@ export const ChatBot: React.FC = () => {
     const userText = input.trim();
     setInput('');
 
-    // הוספת הודעת המשתמש ל-State
     const newMessages: Message[] = [
       ...messages,
       { role: 'user', parts: [{ text: userText }] }
