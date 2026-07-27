@@ -1,42 +1,39 @@
 const { StateGraph, END, START } = require("@langchain/langgraph");
 const { BankState } = require("./state");
+
 const { sanitizerNode } = require("./nodes/sanitizerNode");
 const { recognizeIntentNode } = require("./nodes/recognizeIntentNode");
 const { balanceNode } = require("./nodes/balanceNode");
+const { transferNode } = require("./nodes/transferNode");
 const { formatterNode } = require("./nodes/formatterNode");
 
+// פונקציית ניווט לפי ה-Intent שהתגלה
+const routeIntent = (state) => {
+  if (state.finalResponse) return END; // חסימת ספאם/סניטציה
+
+  switch (state.intent) {
+    case "BALANCE":
+      return "balanceNode";
+    case "TRANSFER":
+      return "transferNode";
+    default:
+      return "formatterNode";
+  }
+};
+
 const workflow = new StateGraph(BankState)
-  .addNode("sanitizer", sanitizerNode)
-  .addNode("recognizeIntent", recognizeIntentNode)
+  .addNode("sanitizerNode", sanitizerNode)
+  .addNode("recognizeIntentNode", recognizeIntentNode)
   .addNode("balanceNode", balanceNode)
-  .addNode("formatter", formatterNode);
+  .addNode("transferNode", transferNode)
+  .addNode("formatterNode", formatterNode)
 
-// START -> Sanitizer
-workflow.addEdge(START, "sanitizer");
-
-// Sanitizer Routing
-workflow.addConditionalEdges("sanitizer", (state) => {
-  if (state.intent === "MALICIOUS") {
-    return END;
-  }
-  return "recognizeIntent";
-});
-
-// Recognize Intent Routing
-workflow.addConditionalEdges("recognizeIntent", (state) => {
-  if (state.intent === "NOT_RELATED") {
-    return END;
-  }
-  if (state.intent === "BALANCE") {
-    return "balanceNode";
-  }
-  // בעתיד נוסיף את ה-TRANSFER
-  return "formatter";
-});
-
-// BalanceNode -> Formatter -> END
-workflow.addEdge("balanceNode", "formatter");
-workflow.addEdge("formatter", END);
+  .addEdge(START, "sanitizerNode")
+  .addEdge("sanitizerNode", "recognizeIntentNode")
+  .addConditionalEdges("recognizeIntentNode", routeIntent)
+  .addEdge("balanceNode", "formatterNode")
+  .addEdge("transferNode", "formatterNode")
+  .addEdge("formatterNode", END);
 
 const bankGraph = workflow.compile();
 
