@@ -1,3 +1,4 @@
+// langgraph/state.js
 const { Annotation } = require("@langchain/langgraph");
 
 const BankState = Annotation.Root({
@@ -7,9 +8,20 @@ const BankState = Annotation.Root({
   }),
   user: Annotation(),
   intent: Annotation(),
-  transferDetails: Annotation(),
-  validationStatus: Annotation(),
-  accountBalance: Annotation(), 
+  transferDetails: Annotation({
+    reducer: (x, y) => ({ ...x, ...y }),
+    default: () => ({ receiverEmail: null, amount: null }),
+  }),
+  validationStatus: Annotation({
+    reducer: (x, y) => ({ ...x, ...y }),
+    default: () => ({ emailValid: false, amountValid: false, error: null }),
+  }),
+  humanApproved: Annotation({
+    reducer: (x, y) => (y !== undefined ? y : x),
+    default: () => false,
+  }),
+  nextTransferAction: Annotation(),
+  accountBalance: Annotation(),
   finalResponse: Annotation(),
 });
 

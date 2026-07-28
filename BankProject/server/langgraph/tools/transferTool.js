@@ -33,7 +33,6 @@ const executeTransferTool = async (senderUser, receiverEmail, amount) => {
       }
     };
   } catch (error) {
-    // החזרת הודעות שגיאה קריאות עבור ה-State/Formatter
     return { 
       success: false, 
       error: error.message 

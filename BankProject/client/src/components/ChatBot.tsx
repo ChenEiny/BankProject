@@ -55,7 +55,6 @@ export const ChatBot: React.FC = () => {
 
   return (
     <div className="chatbot-container" style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000 }}>
-      {/* כפתור פתיחה/סגירה צף */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
@@ -66,7 +65,6 @@ export const ChatBot: React.FC = () => {
         </button>
       )}
 
-      {/* חלון הצ'אט */}
       {isOpen && (
         <div className="bank-card" style={{ width: '350px', height: '480px', display: 'flex', flexDirection: 'column', padding: '16px' }}>
           {/* Header */}

@@ -1,42 +1,42 @@
 const { model } = require("../config/llm");
+const { STRICT_BANK_RULES } = require("../config/systemRules");
 
 const formatterNode = async (state) => {
-  // אם כבר נקבעה תשובה סופית (למשל חסימה ב-sanitizer), נחזיר אותה מראש
   if (state.finalResponse) {
-    return {};
+    // במידה וה-State מוגדר עם Reducer, מספיק להחזיר רק את ההודעה החדשה
+    return {
+      messages: [{ role: "assistant", content: state.finalResponse }]
+    };
   }
 
-  const userName = state.user?.email || "Customer";
-  
-  const systemPrompt = `You are SafeBank's professional, polite, and secure AI financial assistant.
-Format a clear, friendly, and concise response for ${userName} based on the following context:
+  const systemPrompt = `
+${STRICT_BANK_RULES}
 
-- Intent: ${state.intent}
-- Validation/Execution Status: ${JSON.stringify(state.validationStatus || {})}
+YOUR TASK:
+Formulate a concise and clear final response to the user based on the internal system state:
+- Intent: ${state.intent || "UNKNOWN"}
+- Validation Status: ${JSON.stringify(state.validationStatus || {})}
 - Transfer Details: ${JSON.stringify(state.transferDetails || {})}
-- Account Balance: ${state.accountBalance || "N/A"}
 
-Guidelines:
-1. If Intent is 'BALANCE': State the current available account balance clearly.
-2. If Intent is 'TRANSFER':
-   - If missing information (e.g., missing email or amount), politely ask the user to provide the specific missing details.
-   - If transfer was successful, confirm the transferred amount and receiver email cleanly without showing sensitive raw technical IDs.
-   - If transfer failed (e.g., insufficient funds, invalid receiver, transferring to self), clearly explain the reason based on the status error.
-3. Keep the tone professional, reassuring, and secure. Do not output JSON, raw code, or markdown formatting blocks.`;
+FORMATTING INSTRUCTIONS:
+- If info is missing (e.g., recipient email or amount), ask directly for it in one short sentence.
+- If a transaction succeeded or failed, state the outcome clearly in 1-2 sentences.
+- Do NOT output JSON. Output direct text for the end-user.
+`;
 
   try {
     const response = await model.invoke([
-      { role: "system", content: systemPrompt },
+      ["system", systemPrompt],
       ...state.messages
     ]);
 
     return {
-      finalResponse: response.content
+      messages: [{ role: "assistant", content: response.content.trim() }]
     };
   } catch (error) {
-    console.error("Error in formatterNode:", error);
+    console.error("Formatter Node Error:", error);
     return {
-      finalResponse: "I processed your request, but experienced an issue formatting the final answer. Please check your dashboard or try again."
+      messages: [{ role: "assistant", content: "An error occurred while formatting the response." }]
     };
   }
 };

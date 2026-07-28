@@ -1,29 +1,44 @@
 const { model } = require("../config/llm");
+const { STRICT_BANK_RULES } = require("../config/systemRules");
 
 const recognizeIntentNode = async (state) => {
   const lastMessage = state.messages[state.messages.length - 1]?.content || "";
 
-  const systemPrompt = `You are an intent classifier for SafeBank.
+  if (state.intent === "TRANSFER" && lastMessage.includes("@")) {
+    return { intent: "TRANSFER" };
+  }
+
+  const systemPrompt = `
+${STRICT_BANK_RULES}
+
+INTENT CLASSIFICATION TASK:
 Categorize the user's request into EXACTLY ONE of the following intents:
 - "BALANCE": Checking account balance or financial status.
-- "TRANSFER": Requesting to transfer money to someone else.
+- "TRANSFER": Requesting to transfer money, or providing details (like recipient email or amount) for an ongoing transfer.
 - "NOT_RELATED": General chit-chat, non-banking questions, or irrelevant requests.
 
-Respond ONLY with a JSON object in this format:
+Respond ONLY with a valid JSON object in this format:
 {"intent": "BALANCE" | "TRANSFER" | "NOT_RELATED"}`;
 
   try {
     const response = await model.invoke([
-      { role: "system", content: systemPrompt },
-      { role: "user", content: lastMessage }
-    ]);
+    ["system", systemPrompt],
+    ["user", lastMessage]
+  ]);
 
-    const result = JSON.parse(response.content);
-    
+    const cleanedContent = response.content.replace(/```json|```/g, "").trim();
+    const result = JSON.parse(cleanedContent);
+
     if (result.intent === "NOT_RELATED") {
       return {
         intent: "NOT_RELATED",
-        finalResponse: "I am SafeBank's AI financial assistant. How can I help you with your account today?"
+        messages: [
+          ...state.messages,
+          {
+            role: "assistant",
+            content: "SafeBank's assistant is strictly for banking requests. How can I help with your account?"
+          }
+        ]
       };
     }
 
@@ -32,7 +47,13 @@ Respond ONLY with a JSON object in this format:
     console.error("Intent recognition error:", error);
     return { 
       intent: "NOT_RELATED", 
-      finalResponse: "I was unable to understand your request. Could you please try again?" 
+      messages: [
+        ...state.messages,
+        {
+          role: "assistant",
+          content: "I could not understand your request. Please try asking again."
+        }
+      ]
     };
   }
 };

@@ -139,7 +139,6 @@ export default function Dashboard() {
   return (
     <div className="dashboard-container">
 
-      {/* 🔔 באנר התראה בזמן אמת (Real-Time Live Toast/Banner) */}
       {realtimeNotification && (
         <div className="status-badge success" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -157,14 +156,12 @@ export default function Dashboard() {
         </div>
       )}
       
-      {/* גריד של כרטיס יתרה + כרטיס העברה */}
       <div className="dashboard-grid">
         
-        {/* 1. כרטיס נתוני חשבון ויתרה */}
         {account && (
           <BankCard 
             title="Account Overview" 
-            subtitle="Current Balance & Details"
+            subtitle="Current Balance & Details"  
             icon={<CreditCard size={22} />}
           >
             <h1 className="balance-amount">
@@ -179,7 +176,6 @@ export default function Dashboard() {
           </BankCard>
         )}
 
-        {/* 2. כרטיס טופס העברת כספים */}
         <BankCard 
           title="Transfer Money" 
           subtitle="Instant Direct Transfer"
