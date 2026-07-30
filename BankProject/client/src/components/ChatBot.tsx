@@ -12,6 +12,7 @@ export const ChatBot: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,7 +35,7 @@ export const ChatBot: React.FC = () => {
     try {
       const res = await api.post('/chat', {
         message: userText,
-        history: messages 
+        sessionId: sessionIdRef.current
       });
 
       setMessages([

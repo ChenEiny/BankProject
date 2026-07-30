@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
 import { ShieldCheck, LogOut, User as UserIcon } from 'lucide-react';
 import { User } from '../../types';
+import HealthBadge from '../HealthBadge';
 
 interface NavbarProps {
   user: User | null;
   onLogout?: () => void;
 }
 
-export default function Navbar({ user, onLogout }: NavbarProps) 
-{
+export default function Navbar({ user, onLogout }: NavbarProps) {
   return (
     <nav className="main-navbar">
       <div className="nav-container">
@@ -22,6 +22,8 @@ export default function Navbar({ user, onLogout }: NavbarProps)
         {user && (
           <div className="nav-links">
             <div className="user-section">
+              <HealthBadge />
+
               <div className="user-info">
                 <UserIcon size={16} />
                 <span className="user-email">{user.email}</span>

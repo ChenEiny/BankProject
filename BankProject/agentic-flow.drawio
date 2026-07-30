@@ -1,0 +1,312 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="24.7.5">
+  <diagram name="Balance &amp; Transfer Agentic Flow" id="flow1">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1750" pageHeight="2350" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============ TERMINALS ============ -->
+        <mxCell id="n1" value="START&#10;(new inbound chat message)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a1a;fontColor=#ffffff;strokeColor=#000000;arcSize=50;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="40" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="n16" value="END&#10;(reply sent to user)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a1a;fontColor=#ffffff;strokeColor=#000000;arcSize=50;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="560" y="2230" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LLM REASONING NODES (purple) ============ -->
+        <mxCell id="n2" value="sanitizerNode&#10;LLM: is this message malicious /&#10;a prompt-injection attempt?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="520" y="140" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" value="recognizeIntentNode&#10;LLM: classify request as&#10;BALANCE / TRANSFER / NOT_RELATED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="510" y="420" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n5" value="extractTransferDetailsNode&#10;LLM: pull receiverEmail / amount&#10;out of the message, keep previously&#10;collected values if not replaced" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="500" y="690" width="260" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ============ DECISION DIAMONDS (yellow, router functions) ============ -->
+        <mxCell id="d1" value="routeAfterSanitizer" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="580" y="270" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" value="routeIntent" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="580" y="550" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" value="routeMissingDetails" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="580" y="940" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" value="routeValidationResult" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="580" y="1420" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" value="routeApproval" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="580" y="1810" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============ TOOL-CALLING NODES (blue) ============ -->
+        <mxCell id="n4" value="balanceNode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="80" y="700" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n8" value="validateEmailNode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="520" y="1080" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n9" value="validateAmountNode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="520" y="1250" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n14" value="executeTransferNode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="520" y="2000" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============ TOOL BOXES (white, dashed red) ============ -->
+        <mxCell id="t1" value="TOOL: getBalanceTool(user)&#10;reads account balance from DB" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;dashed=1;fontStyle=2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="340" y="700" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="t2" value="TOOL: validateEmailTool(email)&#10;checks format + recipient exists in DB" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;dashed=1;fontStyle=2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="820" y="1080" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="t3" value="TOOL: validateAmountTool(senderId, amount)&#10;checks amount &gt; $0.50 and sender&#10;has sufficient balance" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;dashed=1;fontStyle=2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="820" y="1250" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="t4" value="TOOL: executeTransferTool(user, receiverEmail, amount)&#10;debits sender, credits recipient,&#10;creates the transaction record" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;dashed=1;fontStyle=2;fontSize=11" vertex="1" parent="1">
+          <mxGeometry x="820" y="2000" width="280" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ DETERMINISTIC LOGIC NODES (gray) ============ -->
+        <mxCell id="n6" value="checkMissingDetailsNode&#10;pure logic: is receiverEmail&#10;and/or amount still null?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="510" y="820" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="n10" value="validationResultNode&#10;pure logic: combine&#10;emailValid + amountValid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="510" y="1350" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n12" value="approvalDecisionNode&#10;pure logic: was the reply&#10;yes / no / unrecognized?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="510" y="1690" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============ HUMAN-IN-THE-LOOP (orange) ============ -->
+        <mxCell id="n11" value="humanApprovalNode&#10;interrupt() — PAUSES the graph,&#10;sends TRANSFER_CONFIRMATION&#10;prompt to the UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="500" y="1560" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n13" value="retryApprovalNode&#10;interrupt() again —&#10;'please reply YES or NO'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1080" y="1810" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ============ FORMAT / ASK NODES (green) ============ -->
+        <mxCell id="n7" value="askMissingInfoNode&#10;builds the &quot;please provide X&quot;&#10;message for the missing field" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="1080" y="945" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n15" value="formatterNode&#10;turns finalResponse /&#10;balanceResult / transferResult&#10;into the assistant chat message,&#10;resets transfer state when done" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="500" y="2090" width="260" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LEGEND ============ -->
+        <mxCell id="lgTitle" value="Legend" style="text;html=1;fontSize=14;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1r" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="130" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1t" value="LLM reasoning step (model.invoke)" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="130" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2r" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="164" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2t" value="Node that calls a backend tool" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="164" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg3r" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="198" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg3t" value="External tool / DB call (dashed)" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="198" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg4r" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="232" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg4t" value="Human-in-the-loop: interrupt()" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="232" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg5r" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="266" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg5t" value="Deterministic logic / merges state" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="266" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg6r" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="300" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg6t" value="Formats reply / asks for info" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="300" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg7r" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="334" width="26" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg7t" value="Conditional routing decision" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="334" width="270" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lg8t" value="Edge colors: green = success / approved path, red = failure / rejected / declined path, black = unconditional / neutral, gray dashed = tool call + return." style="text;html=1;fontSize=11;align=left;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="380" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ EDGES ============ -->
+
+        <mxCell id="e1" value="new message" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n1" target="n2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n2" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e3" value="finalResponse already set, OR intent === 'MALICIOUS'&#10;&#10;PURPOSE: short-circuit — a security block or a&#10;canned reply was already produced, so skip&#10;straight to formatting it for the user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;strokeColor=#b85450;fontColor=#b85450;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="d1" target="n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1330" y="320" />
+              <mxPoint x="1330" y="2145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e4" value="phase === 'COLLECTING_TRANSFER'&#10;&#10;PURPOSE: user is mid-transfer (e.g. just replied&#10;&quot;20&quot; or an email address) — treat it as the next&#10;piece of the transfer, don't re-run intent detection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d1" target="n5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e5" value="default: fresh request&#10;&#10;PURPOSE: not blocked and not mid-transfer&#10;&#8594; figure out what the user actually wants" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d1" target="n3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n3" target="d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e7" value="intent === 'BALANCE'&#10;PURPOSE: user wants to know&#10;their current balance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d2" target="n4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e8" value="intent === 'TRANSFER'&#10;PURPOSE: start collecting the&#10;recipient + amount for a transfer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d2" target="n5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e9" value="intent === 'NOT_RELATED' (default)&#10;&#10;PURPOSE: not a banking request&#10;&#8594; politely decline, nothing to execute" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;strokeColor=#b85450;fontColor=#b85450;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="d2" target="n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1300" y="600" />
+              <mxPoint x="1300" y="2160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e10" value="① calls" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="n4" target="t1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="② success &#8594; {success:true, balance}&#10;failure/throw &#8594; caught, {success:false, error}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="t1" target="n4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="balanceResult attached to state either way&#10;PURPOSE: let formatterNode decide the wording" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n4" target="n15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e13" value="always&#10;PURPOSE: figure out what's still&#10;needed before we can validate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n5" target="n6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n6" target="d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e15" value="missingField = EMAIL / AMOUNT / EMAIL_AND_AMOUNT&#10;PURPOSE: still incomplete, ask the user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d3" target="n7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="both fields present&#10;PURPOSE: enough info to validate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d3" target="n8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="PURPOSE: ask user for exactly what's&#10;missing, then wait for their next message" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="n7" target="n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1190" y="2145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e18" value="① calls" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="n8" target="t2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" value="② success &#8594; recipient exists in DB&#10;failure &#8594; bad format / not found" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="t2" target="n8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="PURPOSE: continue regardless of email result —&#10;amount is checked too so both errors can be&#10;reported to the user together" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n8" target="n9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e21" value="① calls" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="n9" target="t3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" value="② success &#8594; amount valid &amp; sufficient funds&#10;failure &#8594; invalid amount / insufficient balance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="t3" target="n9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" value="always&#10;PURPOSE: combine both validation outcomes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n9" target="n10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n10" target="d4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e25" value="emailValid &amp;&amp; amountValid&#10;PURPOSE: both checks passed &#8594; ask the&#10;user to confirm before moving real money" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;strokeColor=#82b366;fontColor=#82b366;" edge="1" parent="1" source="d4" target="n11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" value="else (email or amount invalid)&#10;PURPOSE: report the specific error(s) back,&#10;stay in COLLECTING_TRANSFER so the user can fix it" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;strokeColor=#b85450;fontColor=#b85450;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="d4" target="n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1340" y="1470" />
+              <mxPoint x="1340" y="2130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e27" value="PURPOSE: interrupt() pauses graph execution;&#10;resumes when the user replies, with the raw&#10;reply stored as approvalResult" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n11" target="n12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n12" target="d5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e29" value="APPROVED (yes / confirm / &#1499;&#1503; / &#1502;&#1488;&#1513;&#1512;)&#10;PURPOSE: user confirmed &#8594; move the money" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;strokeColor=#82b366;fontColor=#82b366;" edge="1" parent="1" source="d5" target="n14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" value="REJECTED (no / cancel / &#1500;&#1488; / &#1502;&#1489;&#1496;&#1500;)&#10;PURPOSE: user declined &#8594; cancel,&#10;nothing to execute" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;strokeColor=#b85450;fontColor=#b85450;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="d5" target="n15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1360" y="1860" />
+              <mxPoint x="1360" y="2110" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e31" value="UNKNOWN (default)&#10;PURPOSE: reply wasn't recognized&#10;as yes or no &#8594; ask again" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="d5" target="n13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" value="PURPOSE: interrupt() again; loops back&#10;to re-evaluate the new reply" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n13" target="n12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1190" y="1725" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e33" value="① calls" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="n14" target="t4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" value="② success &#8594; debits/credits + transaction record&#10;failure/throw &#8594; caught, {success:false, error}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#888888;fontColor=#888888;fontSize=11;" edge="1" parent="1" source="t4" target="n14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e35" value="transferResult attached either way&#10;PURPOSE: let formatterNode decide the wording" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n14" target="n15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e36" value="PURPOSE: assistant message appended to state;&#10;transfer-related state reset unless the user is&#10;still mid-collection (COLLECTING_TRANSFER)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n15" target="n16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

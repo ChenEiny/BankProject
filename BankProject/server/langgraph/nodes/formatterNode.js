@@ -1,44 +1,75 @@
-const { model } = require("../config/llm");
-const { STRICT_BANK_RULES } = require("../config/systemRules");
+// langgraph/nodes/formatterNode.js
 
 const formatterNode = async (state) => {
-  if (state.finalResponse) {
-    // במידה וה-State מוגדר עם Reducer, מספיק להחזיר רק את ההודעה החדשה
-    return {
-      messages: [{ role: "assistant", content: state.finalResponse }]
-    };
+  let responseText = state.finalResponse;
+
+  if (!responseText && state.balanceResult) {
+    responseText = state.balanceResult.success
+      ? `Your current balance is $${state.balanceResult.balance}.`
+      : state.balanceResult.error || "Could not retrieve your balance.";
   }
 
-  const systemPrompt = `
-${STRICT_BANK_RULES}
+  if (!responseText && state.transferResult) {
+    if (state.transferResult.success) {
+      const transaction = state.transferResult.transaction;
 
-YOUR TASK:
-Formulate a concise and clear final response to the user based on the internal system state:
-- Intent: ${state.intent || "UNKNOWN"}
-- Validation Status: ${JSON.stringify(state.validationStatus || {})}
-- Transfer Details: ${JSON.stringify(state.transferDetails || {})}
-
-FORMATTING INSTRUCTIONS:
-- If info is missing (e.g., recipient email or amount), ask directly for it in one short sentence.
-- If a transaction succeeded or failed, state the outcome clearly in 1-2 sentences.
-- Do NOT output JSON. Output direct text for the end-user.
-`;
-
-  try {
-    const response = await model.invoke([
-      ["system", systemPrompt],
-      ...state.messages
-    ]);
-
-    return {
-      messages: [{ role: "assistant", content: response.content.trim() }]
-    };
-  } catch (error) {
-    console.error("Formatter Node Error:", error);
-    return {
-      messages: [{ role: "assistant", content: "An error occurred while formatting the response." }]
-    };
+      responseText =
+        `Successfully transferred $${transaction.amount} ` +
+        `to ${transaction.receiverEmail}. ` +
+        `Transaction ID: ${transaction.id}.`;
+    } else {
+      responseText =
+        state.transferResult.error || "The transfer failed.";
+    }
   }
+
+  if (!responseText && state.intent === "NOT_RELATED") {
+    responseText =
+      "I can only assist with SafeBank balance checks and transfers.";
+  }
+
+  responseText ||= "The request could not be completed.";
+
+  return {
+    messages: [
+      {
+        role: "assistant",
+        content: responseText,
+      },
+    ],
+
+    /*
+     * מנקים state של פעולה שהסתיימה.
+     * לא מוחקים את messages.
+     */
+    phase:
+      state.phase === "COLLECTING_TRANSFER"
+        ? "COLLECTING_TRANSFER"
+        : "IDLE",
+
+    finalResponse: null,
+
+    ...(state.phase !== "COLLECTING_TRANSFER"
+      ? {
+          intent: null,
+          transferDetails: {
+            receiverEmail: null,
+            amount: null,
+          },
+          validationStatus: {
+            emailValid: false,
+            amountValid: false,
+            emailError: null,
+            amountError: null,
+          },
+          approvalResult: null,
+          approvalDecision: null,
+          transferResult: null,
+          balanceResult: null,
+          missingField: null,
+        }
+      : {}),
+  };
 };
 
 module.exports = { formatterNode };

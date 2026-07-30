@@ -1,31 +1,30 @@
 // langgraph/nodes/executeTransferNode.js
+
 const { executeTransferTool } = require("../tools/transferTool");
 
 const executeTransferNode = async (state) => {
   const { receiverEmail, amount } = state.transferDetails || {};
 
-  const result = await executeTransferTool(state.user, receiverEmail, amount);
+  try {
+    const result = await executeTransferTool(
+      state.user,
+      receiverEmail,
+      amount
+    );
 
-  if (result.success) {
     return {
-      validationStatus: {
-        ...state.validationStatus,
-        isTransferSuccessful: true,
-        transaction: result.transaction,
-        error: null
+      transferResult: result,
+    };
+  } catch (error) {
+    console.error("Transfer execution error:", error);
+
+    return {
+      transferResult: {
+        success: false,
+        error: "The transfer could not be completed.",
       },
-      finalResponse: `Successfully transferred $${amount} to ${receiverEmail}. Transaction ID: ${result.transaction?.id}`
     };
   }
-
-  return {
-    validationStatus: {
-      ...state.validationStatus,
-      isTransferSuccessful: false,
-      error: result.error || "Transfer execution failed."
-    },
-    finalResponse: `Transfer failed: ${result.error || "Transaction error"}`
-  };
 };
 
 module.exports = { executeTransferNode };

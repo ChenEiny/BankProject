@@ -1,28 +1,81 @@
 // langgraph/state.js
+
 const { Annotation } = require("@langchain/langgraph");
+
+const overwrite = (_current, update) => update;
 
 const BankState = Annotation.Root({
   messages: Annotation({
-    reducer: (x, y) => x.concat(y),
+    reducer: (current, update) => current.concat(update),
     default: () => [],
   }),
-  user: Annotation(),
-  intent: Annotation(),
+
+  user: Annotation({
+    reducer: overwrite,
+    default: () => null,
+  }),
+
+  phase: Annotation({
+    reducer: overwrite,
+    default: () => "IDLE",
+  }),
+
+  intent: Annotation({
+    reducer: overwrite,
+    default: () => null,
+  }),
+
   transferDetails: Annotation({
-    reducer: (x, y) => ({ ...x, ...y }),
-    default: () => ({ receiverEmail: null, amount: null }),
+    reducer: (current, update) => ({
+      ...current,
+      ...update,
+    }),
+    default: () => ({
+      receiverEmail: null,
+      amount: null,
+    }),
   }),
+
   validationStatus: Annotation({
-    reducer: (x, y) => ({ ...x, ...y }),
-    default: () => ({ emailValid: false, amountValid: false, error: null }),
+    reducer: (current, update) => ({
+      ...current,
+      ...update,
+    }),
+    default: () => ({
+      emailValid: false,
+      amountValid: false,
+      emailError: null,
+      amountError: null,
+    }),
   }),
-  humanApproved: Annotation({
-    reducer: (x, y) => (y !== undefined ? y : x),
-    default: () => false,
+
+  approvalResult: Annotation({
+    reducer: overwrite,
+    default: () => null,
   }),
-  nextTransferAction: Annotation(),
-  accountBalance: Annotation(),
-  finalResponse: Annotation(),
+
+  balanceResult: Annotation({
+    reducer: overwrite,
+    default: () => null,
+  }),
+
+  transferResult: Annotation({
+    reducer: overwrite,
+    default: () => null,
+  }),
+
+  finalResponse: Annotation({
+    reducer: overwrite,
+    default: () => null,
+  }),
+  missingField: Annotation({
+  reducer: overwrite,
+  default: () => null,
+  }),
+  approvalDecision: Annotation({
+  reducer: overwrite,
+  default: () => null,
+  }),
 });
 
 module.exports = { BankState };

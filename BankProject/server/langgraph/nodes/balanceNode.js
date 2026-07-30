@@ -1,19 +1,24 @@
+// langgraph/nodes/balanceNode.js
+
 const { getBalanceTool } = require("../tools/balanceTool");
 
 const balanceNode = async (state) => {
-  const result = await getBalanceTool(state.user);
+  try {
+    const result = await getBalanceTool(state.user);
 
-  if (result.success) {
     return {
-      validationStatus: { isBalanceFetched: true },
-      accountBalance: result.balance,
+      balanceResult: result,
+    };
+  } catch (error) {
+    console.error("Balance retrieval error:", error);
+
+    return {
+      balanceResult: {
+        success: false,
+        error: "Could not retrieve your balance.",
+      },
     };
   }
-
-  return {
-    validationStatus: { isBalanceFetched: false },
-    accountBalance: null,
-  };
 };
 
 module.exports = { balanceNode };

@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
 export default function HealthBadge() {
-  const [health, setHealth] = useState<{ status: string; color: string }>({
+  const [health, setHealth] = useState<{ status: string; type: 'success' | 'warning' | 'error' | 'checking' }>({
     status: 'CHECKING',
-    color: 'gray',
+    type: 'checking',
   });
 
   useEffect(() => {
@@ -12,13 +12,13 @@ export default function HealthBadge() {
       api.get('/health')
         .then((res) => {
           if (res.data.status === 'UP') {
-            setHealth({ status: 'System Online', color: '#2e7d32' });
+            setHealth({ status: 'System Online', type: 'success' });
           } else {
-            setHealth({ status: 'Degraded', color: '#ed6c02' });
+            setHealth({ status: 'Degraded', type: 'warning' });
           }
         })
         .catch(() => {
-          setHealth({ status: 'Offline', color: '#d32f2f' });
+          setHealth({ status: 'Offline', type: 'error' });
         });
     };
 
@@ -28,15 +28,9 @@ export default function HealthBadge() {
   }, []);
 
   return (
-    <span style={{
-      fontSize: '12px',
-      padding: '4px 10px',
-      borderRadius: '12px',
-      color: 'white',
-      backgroundColor: health.color,
-      fontWeight: 'bold',
-    }}>
-      {health.status}
-    </span>
+    <div className={`health-badge ${health.type}`}>
+      <span className="health-dot" />
+      <span className="health-status-text">{health.status}</span>
+    </div>
   );
 }

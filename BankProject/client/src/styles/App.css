@@ -523,3 +523,58 @@ html, body, #root {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.health-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  transition: all 0.3s ease;
+}
+
+.health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Status variants */
+.health-badge.success {
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+.health-badge.success .health-dot {
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.health-badge.warning {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+.health-badge.warning .health-dot {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.health-badge.error {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+.health-badge.error .health-dot {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.health-badge.checking {
+  color: #94a3b8;
+}
+.health-badge.checking .health-dot {
+  background-color: #64748b;
+}
