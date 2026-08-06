@@ -1,4 +1,5 @@
-// langgraph/nodes/checkMissingDetailsNode.js
+
+const logger = require("../../config/logger").child({ module: "langgraph:checkMissingDetailsNode" });
 
 const checkMissingDetailsNode = async (state) => {
   const { receiverEmail, amount } = state.transferDetails || {};
@@ -12,6 +13,8 @@ const checkMissingDetailsNode = async (state) => {
   } else if (amount == null) {
     missingField = "AMOUNT";
   }
+
+  logger.debug("Missing details check", { missingField });
 
   return {
     missingField,

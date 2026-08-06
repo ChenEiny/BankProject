@@ -8,14 +8,17 @@ const chatRoutes = require('./routes/chatRoute');
 const http = require('http');
 const { initSocket } = require('./socket');
 
-const { globalErrorHandler } = require('./middleware/errorWrapper'); 
+const { globalErrorHandler } = require('./middleware/errorWrapper');
+const requestLogger = require('./middleware/requestLogger');
+const logger = require('./config/logger');
 
 const app = express();
 const server = http.createServer(app);
 
 app.use(express.json()); //MIDDLEWARE
-app.use(helmet()); 
+app.use(helmet());
 app.use(cookieParser()); //to nove the cookies inside the middleware to access tokens
+app.use(requestLogger);
 
 initSocket(server);
 
@@ -76,5 +79,5 @@ app.use(globalErrorHandler);
 
 //Server listener
 server.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    logger.info(`Server is running on http://localhost:${port}`);
 });

@@ -1,4 +1,5 @@
-// langgraph/nodes/approvalDecisionNode.js
+
+const logger = require("../../config/logger").child({ module: "langgraph:approvalDecisionNode" });
 
 const approvalDecisionNode = async (state) => {
   const answer = String(state.approvalResult || "")
@@ -27,7 +28,16 @@ const approvalDecisionNode = async (state) => {
     "מבטל",
   ]);
 
+  const { receiverEmail, amount } = state.transferDetails || {};
+
   if (approvedValues.has(answer)) {
+    logger.info("Transfer approval decision", {
+      senderEmail: state.user?.email,
+      receiverEmail,
+      amount,
+      decision: "APPROVED",
+    });
+
     return {
       phase: "EXECUTING_TRANSFER",
       approvalDecision: "APPROVED",
@@ -36,12 +46,26 @@ const approvalDecisionNode = async (state) => {
   }
 
   if (rejectedValues.has(answer)) {
+    logger.info("Transfer approval decision", {
+      senderEmail: state.user?.email,
+      receiverEmail,
+      amount,
+      decision: "REJECTED",
+    });
+
     return {
       phase: "IDLE",
       approvalDecision: "REJECTED",
       finalResponse: "Transfer cancelled.",
     };
   }
+
+  logger.debug("Transfer approval decision unclear", {
+    senderEmail: state.user?.email,
+    receiverEmail,
+    amount,
+    answer,
+  });
 
   return {
     phase: "AWAITING_APPROVAL",

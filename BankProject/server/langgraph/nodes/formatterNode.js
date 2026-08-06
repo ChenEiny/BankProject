@@ -1,4 +1,5 @@
-// langgraph/nodes/formatterNode.js
+
+const logger = require("../../config/logger").child({ module: "langgraph:formatterNode" });
 
 const formatterNode = async (state) => {
   let responseText = state.finalResponse;
@@ -29,6 +30,8 @@ const formatterNode = async (state) => {
   }
 
   responseText ||= "The request could not be completed.";
+
+  logger.debug("Final response formatted", { responseLength: responseText.length });
 
   return {
     messages: [

@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Account = require('../model/accountModel');
 const transporter = require('../config/mailer');
 const { AppError } = require('../middleware/errorWrapper.js');
+const logger = require('../config/logger').child({ module: 'authController' });
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
 async function register(req) 
@@ -70,6 +71,12 @@ async function register(req)
 
     await transporter.sendMail(mailOptions);
 
+    logger.info("User registered", {
+        userId: newUser.id,
+        email: newUser.email,
+        phone: newUser.phone,
+    });
+
     return {
         _customStatus: 201,
         message: "Success Signup",
@@ -98,32 +105,41 @@ async function login(req, res)
     }
 
     const user = await UserModel.findByEmail(email);
-    if (!user) 
+    if (!user)
     {
+        logger.warn("Login failed", { email, reason: "no account with this email" });
         throw new AppError("Invalid email or password", 401);
     }
 
-    if (!user.is_verified) 
+    if (!user.is_verified)
     {
+        logger.warn("Login failed", { email, reason: "email not verified" });
         throw new AppError("Please verify your email before logging in.", 403);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) 
+    if (!isMatch)
     {
+        logger.warn("Login failed", { email, reason: "incorrect password" });
         throw new AppError("Invalid email or password", 401);
     }
 
     const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: '1h' }     
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
     );
 
     res.cookie('token', token, {
-        httpOnly: true,                      
-        sameSite: 'lax',                     
-        maxAge: 60 * 60 * 1000               
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 1000
+    });
+
+    logger.info("User login success", {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
     });
 
     return {
@@ -155,22 +171,33 @@ async function verifyEmail(req, res)
             { expiresIn: '15m' } 
         );
 
-        res.cookie('token', sessionToken, 
+        res.cookie('token', sessionToken,
         {
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production', 
-            maxAge: 15 * 60 * 1000 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 15 * 60 * 1000
+        });
+
+        logger.info("Email verified", {
+            userId: updatedUser.id,
+            email: updatedUser.email,
         });
 
         res.redirect(`${clientUrl}/dashboard`);
-    } catch (error) 
+    } catch (error)
     {
+        logger.warn("Email verification failed", { error: error.message });
         throw new AppError('<h1>Verification link is invalid or has expired.</h1>', 400);
     }
 }
 
-async function logout(req, res) 
+async function logout(req, res)
 {
+    logger.info("User logout", {
+        userId: req.user?.id,
+        email: req.user?.email,
+    });
+
     res.clearCookie('token', { httpOnly: true });
     return { message: "Successful Logout. Token cleared." };
 }

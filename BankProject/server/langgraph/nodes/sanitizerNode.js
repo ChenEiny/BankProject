@@ -1,7 +1,8 @@
-// langgraph/nodes/sanitizerNode.js
 
 const { model } = require("../config/llm");
 const { getLastUserMessage } = require("../utils/messages");
+const { logModelCall } = require("../utils/llmLogger");
+const logger = require("../../config/logger").child({ module: "langgraph:sanitizerNode" });
 
 const sanitizerNode = async (state) => {
   const input = getLastUserMessage(state);
@@ -18,7 +19,7 @@ const sanitizerNode = async (state) => {
     return {};
   }
 
-  const response = await model.invoke([
+  const messages = [
     {
       role: "system",
       content: `
@@ -40,7 +41,11 @@ Return only JSON:
       role: "user",
       content: input,
     },
-  ]);
+  ];
+
+  const response = await logModelCall("sanitizerNode", messages, () =>
+    model.invoke(messages)
+  );
 
   try {
     const parsed = JSON.parse(
@@ -48,13 +53,15 @@ Return only JSON:
     );
 
     if (parsed.isMalicious === true) {
+      logger.warn("Malicious input detected", { input: input.slice(0, 200) });
+
       return {
         intent: "MALICIOUS",
         finalResponse: "Your request was declined for security reasons.",
       };
     }
   } catch (error) {
-    console.error("Sanitizer parsing error:", error);
+    logger.error("Sanitizer parsing error", { error: error.message });
   }
 
   return {};

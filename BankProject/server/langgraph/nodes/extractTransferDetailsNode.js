@@ -1,13 +1,14 @@
-// langgraph/nodes/extractTransferDetailsNode.js
 
 const { model } = require("../config/llm");
 const { getLastUserMessage } = require("../utils/messages");
+const { logModelCall } = require("../utils/llmLogger");
+const logger = require("../../config/logger").child({ module: "langgraph:extractTransferDetailsNode" });
 
 const extractTransferDetailsNode = async (state) => {
   const input = getLastUserMessage(state);
   const current = state.transferDetails || {};
 
-  const response = await model.invoke([
+  const messages = [
     {
       role: "system",
       content: `
@@ -33,7 +34,11 @@ Return only JSON:
       role: "user",
       content: input,
     },
-  ]);
+  ];
+
+  const response = await logModelCall("extractTransferDetailsNode", messages, () =>
+    model.invoke(messages)
+  );
 
   try {
     const parsed = JSON.parse(
@@ -45,20 +50,24 @@ Return only JSON:
         ? null
         : Number(parsed.amount);
 
+    const transferDetails = {
+      receiverEmail:
+        parsed.receiverEmail ||
+        current.receiverEmail ||
+        null,
+
+      amount:
+        Number.isFinite(parsedAmount)
+          ? parsedAmount
+          : current.amount ?? null,
+    };
+
+    logger.debug("Transfer details extracted", transferDetails);
+
     return {
       phase: "COLLECTING_TRANSFER",
 
-      transferDetails: {
-        receiverEmail:
-          parsed.receiverEmail ||
-          current.receiverEmail ||
-          null,
-
-        amount:
-          Number.isFinite(parsedAmount)
-            ? parsedAmount
-            : current.amount ?? null,
-      },
+      transferDetails,
 
       validationStatus: {
         emailValid: false,
@@ -70,7 +79,7 @@ Return only JSON:
       finalResponse: null,
     };
   } catch (error) {
-    console.error("Transfer extraction error:", error);
+    logger.error("Transfer extraction error", { error: error.message });
 
     return {
       phase: "COLLECTING_TRANSFER",

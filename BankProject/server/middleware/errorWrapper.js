@@ -1,5 +1,6 @@
+const logger = require('../config/logger');
 
-class AppError extends Error 
+class AppError extends Error
 {
     constructor(message, statusCode) 
     {
@@ -37,7 +38,13 @@ function globalErrorHandler(err, req, res, next)
     const statusCode = err.statusCode || 500;
     const message = err.message || "Internal server error";
 
-    console.error(`[Error ${statusCode}]:`, err.stack);
+    logger.error('Request error', {
+        statusCode,
+        message,
+        method: req.method,
+        path: req.originalUrl,
+        stack: err.stack,
+    });
 
     return res.status(statusCode).json({
         status: "error",

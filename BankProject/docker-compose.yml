@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: bankproject-backend
+    network_mode: host
+    env_file:
+      - ./server/.env
+    restart: unless-stopped
+    volumes:
+      - ./server/logs:/app/server/logs

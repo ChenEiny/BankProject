@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const logger = require('./config/logger').child({ module: 'socket' });
 
 let io;
 
@@ -28,26 +29,31 @@ const initSocket = (server) => {
     }
 
     if (!token) {
+      logger.warn('Socket authentication failed: token missing', { socketId: socket.id });
       return next(new Error("Authentication error: Token missing"));
     }
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.user = decoded; 
+      socket.user = decoded;
       next();
     } catch (err) {
+      logger.warn('Socket authentication failed: invalid token', {
+        socketId: socket.id,
+        error: err.message,
+      });
       next(new Error("Authentication error: Invalid token"));
     }
   });
 
   io.on('connection', (socket) => {
-    const userId = socket.user.email; 
-    
+    const userId = socket.user.email;
+
     socket.join(`user_${userId}`);
-    console.log(`User ${userId} connected and joined room: user_${userId}`);
+    logger.info('User connected', { userId, socketId: socket.id, room: `user_${userId}` });
 
     socket.on('disconnect', () => {
-      console.log(`User ${userId} disconnected`);
+      logger.info('User disconnected', { userId, socketId: socket.id });
     });
   });
 

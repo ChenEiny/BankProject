@@ -1,6 +1,6 @@
-// langgraph/nodes/validateAmountNode.js
 
 const { validateAmountTool } = require("../tools/validationTools");
+const logger = require("../../config/logger").child({ module: "langgraph:validateAmountNode" });
 
 const validateAmountNode = async (state) => {
   const senderId = state.user?.id;
@@ -8,6 +8,8 @@ const validateAmountNode = async (state) => {
 
   try {
     const result = await validateAmountTool(senderId, amount);
+
+    logger.debug("Amount validated", { amount, amountValid: result.success === true });
 
     return {
       validationStatus: {
@@ -18,7 +20,7 @@ const validateAmountNode = async (state) => {
       },
     };
   } catch (error) {
-    console.error("Amount validation error:", error);
+    logger.error("Amount validation error", { error: error.message });
 
     return {
       validationStatus: {

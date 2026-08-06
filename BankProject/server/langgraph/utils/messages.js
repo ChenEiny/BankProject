@@ -1,4 +1,3 @@
-// langgraph/utils/messages.js
 
 const getLastUserMessage = (state) => {
   for (let i = state.messages.length - 1; i >= 0; i -= 1) {

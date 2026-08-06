@@ -1,61 +1,57 @@
 // langgraph/bankGraph.js
 
-const {
-  StateGraph,
-  START,
-  END,
-  MemorySaver,
-} = require("@langchain/langgraph");
+const {StateGraph,START,END,MemorySaver,} = require("@langchain/langgraph");
 
 const { BankState } = require("./state");
 
 const { sanitizerNode } = require("./nodes/sanitizerNode");
-const {
-  recognizeIntentNode,
-} = require("./nodes/recognizeIntentNode");
+const {recognizeIntentNode,} = require("./nodes/recognizeIntentNode");
 
-const {
-  extractTransferDetailsNode,
-} = require("./nodes/extractTransferDetailsNode");
+const {extractTransferDetailsNode,} = require("./nodes/extractTransferDetailsNode");
 
-const {
-  checkMissingDetailsNode,
-} = require("./nodes/checkMissingDetailsNode");
+const {checkMissingDetailsNode,} = require("./nodes/checkMissingDetailsNode");
 
-const {
-  askMissingInfoNode,
-} = require("./nodes/askMissingInfoNode");
+const {askMissingInfoNode,} = require("./nodes/askMissingInfoNode");
 
-const {
-  validateEmailNode,
-} = require("./nodes/validateEmailNode");
+const {validateEmailNode,} = require("./nodes/validateEmailNode");
 
-const {
-  validateAmountNode,
-} = require("./nodes/validateAmountNode");
+const {validateAmountNode,} = require("./nodes/validateAmountNode");
 
-const {
-  validationResultNode,
-} = require("./nodes/validationResultNode");
+const {validationResultNode,} = require("./nodes/validationResultNode");
 
-const {
-  humanApprovalNode,
-} = require("./nodes/humanApprovalNode");
+const {humanApprovalNode,} = require("./nodes/humanApprovalNode");
 
-const {
-  approvalDecisionNode,
-} = require("./nodes/approvalDecisionNode");
+const {approvalDecisionNode,} = require("./nodes/approvalDecisionNode");
 
-const {
-  retryApprovalNode,
-} = require("./nodes/retryApprovalNode");
+const {retryApprovalNode,} = require("./nodes/retryApprovalNode");
 
-const {
-  executeTransferNode,
-} = require("./nodes/executeTransferNode");
+const {executeTransferNode,} = require("./nodes/executeTransferNode");
 
 const { balanceNode } = require("./nodes/balanceNode");
 const { formatterNode } = require("./nodes/formatterNode");
+
+const logger = require("../config/logger").child({ module: "bankGraph" });
+
+/*
+ * Wraps every node so the flow through the graph is visible in the log:
+ * when a node starts, when it finishes (and how long it took), or if it throws.
+ */
+const withFlowLogging = (name, node) => async (state, config) => {
+  logger.debug(`Node started: ${name}`);
+  const start = Date.now();
+
+  try {
+    const result = await node(state, config);
+    logger.debug(`Node finished: ${name}`, { durationMs: Date.now() - start });
+    return result;
+  } catch (error) {
+    logger.error(`Node threw: ${name}`, {
+      durationMs: Date.now() - start,
+      error: error.message,
+    });
+    throw error;
+  }
+};
 
 // ---------- Routers ----------
 
@@ -119,76 +115,49 @@ const routeApproval = (state) => {
 
 // ---------- Graph ----------
 
+const withNode = (name, node) => withFlowLogging(name, node);
+
 const workflow = new StateGraph(BankState)
-  .addNode("sanitizerNode", sanitizerNode)
-  .addNode("recognizeIntentNode", recognizeIntentNode)
+  .addNode("sanitizerNode", withNode("sanitizerNode", sanitizerNode))
+  .addNode("recognizeIntentNode", withNode("recognizeIntentNode", recognizeIntentNode))
+  .addNode("extractTransferDetailsNode", withNode("extractTransferDetailsNode", extractTransferDetailsNode))
+  .addNode("checkMissingDetailsNode", withNode("checkMissingDetailsNode", checkMissingDetailsNode))
+  .addNode("askMissingInfoNode", withNode("askMissingInfoNode", askMissingInfoNode))
+  .addNode("validateEmailNode", withNode("validateEmailNode", validateEmailNode))
+  .addNode("validateAmountNode", withNode("validateAmountNode", validateAmountNode))
+  .addNode("validationResultNode", withNode("validationResultNode", validationResultNode))
 
-  .addNode(
-    "extractTransferDetailsNode",
-    extractTransferDetailsNode
-  )
+  .addNode("humanApprovalNode", withNode("humanApprovalNode", humanApprovalNode))
+  .addNode("approvalDecisionNode", withNode("approvalDecisionNode", approvalDecisionNode))
+  .addNode("retryApprovalNode", withNode("retryApprovalNode", retryApprovalNode))
 
-  .addNode(
-    "checkMissingDetailsNode",
-    checkMissingDetailsNode
-  )
-
-  .addNode("askMissingInfoNode", askMissingInfoNode)
-
-  .addNode("validateEmailNode", validateEmailNode)
-  .addNode("validateAmountNode", validateAmountNode)
-  .addNode("validationResultNode", validationResultNode)
-
-  .addNode("humanApprovalNode", humanApprovalNode)
-  .addNode("approvalDecisionNode", approvalDecisionNode)
-  .addNode("retryApprovalNode", retryApprovalNode)
-
-  .addNode("executeTransferNode", executeTransferNode)
-  .addNode("balanceNode", balanceNode)
-  .addNode("formatterNode", formatterNode)
+  .addNode("executeTransferNode", withNode("executeTransferNode", executeTransferNode))
+  .addNode("balanceNode", withNode("balanceNode", balanceNode))
+  .addNode("formatterNode", withNode("formatterNode", formatterNode))
 
   .addEdge(START, "sanitizerNode")
 
-  .addConditionalEdges(
-    "sanitizerNode",
-    routeAfterSanitizer
-  )
+  .addConditionalEdges("sanitizerNode",routeAfterSanitizer)
 
-  .addConditionalEdges(
-    "recognizeIntentNode",
-    routeIntent
-  )
+  .addConditionalEdges("recognizeIntentNode",routeIntent)
 
-  .addEdge(
-    "extractTransferDetailsNode",
-    "checkMissingDetailsNode"
-  )
+  .addEdge("extractTransferDetailsNode","checkMissingDetailsNode")
 
-  .addConditionalEdges(
-    "checkMissingDetailsNode",
-    routeMissingDetails
-  )
+  .addConditionalEdges("checkMissingDetailsNode",routeMissingDetails)
 
   .addEdge("askMissingInfoNode", "formatterNode")
 
   .addEdge("validateEmailNode", "validateAmountNode")
   .addEdge("validateAmountNode", "validationResultNode")
 
-  .addConditionalEdges(
-    "validationResultNode",
-    routeValidationResult
-  )
+  .addConditionalEdges("validationResultNode",routeValidationResult)
 
   /*
    * humanApprovalNode נעצר ב-interrupt.
    * לאחר resume הוא ממשיך ל-approvalDecisionNode.
    */
   .addEdge("humanApprovalNode", "approvalDecisionNode")
-
-  .addConditionalEdges(
-    "approvalDecisionNode",
-    routeApproval
-  )
+  .addConditionalEdges("approvalDecisionNode",routeApproval)
 
   .addEdge("retryApprovalNode", "approvalDecisionNode")
 

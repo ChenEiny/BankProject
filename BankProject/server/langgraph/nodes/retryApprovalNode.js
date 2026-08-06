@@ -1,9 +1,15 @@
-// langgraph/nodes/retryApprovalNode.js
 
 const { interrupt } = require("@langchain/langgraph");
+const logger = require("../../config/logger").child({ module: "langgraph:retryApprovalNode" });
 
 const retryApprovalNode = async (state) => {
   const { receiverEmail, amount } = state.transferDetails || {};
+
+  logger.debug("Retrying human approval prompt", {
+    senderEmail: state.user?.email,
+    receiverEmail,
+    amount,
+  });
 
   const answer = interrupt({
     type: "TRANSFER_CONFIRMATION",

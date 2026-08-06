@@ -1,21 +1,15 @@
-const {
-  Command,
-} = require("@langchain/langgraph");
+const {Command,} = require("@langchain/langgraph");
 
-const {
-  bankGraph,
-} = require("../langgraph/bankGraph");
+const {bankGraph,} = require("../langgraph/bankGraph");
 
-const {
-  AppError,
-} = require("../middleware/errorWrapper");
+const {AppError,} = require("../middleware/errorWrapper");
 
-const {
-  CallbackHandler,
-} = require("langfuse-langchain");
+const {CallbackHandler,} = require("langfuse-langchain");
+
+const logger = require("../config/logger").child({ module: "chatController" });
 
 /**
- * מחפש interrupt פעיל בתוך snapshot של LangGraph.
+Check for active Human in the loop
  */
 const getActiveInterrupt = (snapshot) => {
   const tasks = Array.isArray(snapshot?.tasks)
@@ -68,10 +62,6 @@ const handleChatMessage = async (req, res) => {
       email: "einy0002@gmail.com",
     };
 
-  /*
-   * מומלץ שה-client ייצור UUID פעם אחת לכל שיחת chat.
-   * אין להחליף אותו בין הודעת ההעברה לבין הודעת YES.
-   */
   const conversationId =
     sessionId ||
     req.body.sessionState?.sessionId;
@@ -79,6 +69,12 @@ const handleChatMessage = async (req, res) => {
   if (!conversationId) {
     throw new AppError("Session ID is required", 400);
   }
+
+  logger.info("Chat message received", {
+    sessionId: conversationId,
+    userId: currentUser.id,
+    messageLength: normalizedMessage.length,
+  });
 
   const graphConfig = {
     configurable: {
@@ -107,11 +103,12 @@ const handleChatMessage = async (req, res) => {
 
   if (activeInterrupt) {
     /*
-     * המשתמש עונה על שאלה שהגיעה מ-interrupt.
-     * למשל YES או NO.
-     *
-     * לא מתחילים את הגרף מחדש ולא שולחים messages חדשים.
+    Response from YES or NO in human in the loop
      */
+    logger.debug("Resuming bank graph after human approval", {
+      sessionId: conversationId,
+    });
+
     finalState = await bankGraph.invoke(
       new Command({
         resume: normalizedMessage,
@@ -120,12 +117,10 @@ const handleChatMessage = async (req, res) => {
     );
   } else {
     /*
-     * בקשה בנקאית חדשה או המשך איסוף מידע רגיל.
-     * למשל:
-     * send 20
-     * ואז:
-     * cheiny247@gmail.com
+    new Banking Message
      */
+    logger.debug("Invoking bank graph", { sessionId: conversationId });
+
     finalState = await bankGraph.invoke(
       {
         messages: [
@@ -160,15 +155,15 @@ const handleChatMessage = async (req, res) => {
         : interruptValue?.message ||
           "Please confirm the transfer.";
 
+    logger.info("Chat awaiting human approval", {
+      sessionId: conversationId,
+    });
+
     return res.json({
       reply,
       awaitingApproval: true,
       sessionId: String(conversationId),
 
-      /*
-       * אפשר להחזיר מידע לתצוגה בלבד.
-       * ה-client לא צריך להחזיר אותו אל השרת בתור state.
-       */
       approvalRequest:
         typeof interruptValue === "object"
           ? interruptValue
@@ -183,6 +178,11 @@ const handleChatMessage = async (req, res) => {
     finalState.finalResponse ||
     lastAssistantMessage ||
     "I'm sorry, I couldn't process your request.";
+
+  logger.info("Chat response sent", {
+    sessionId: conversationId,
+    intent: finalState.intent || null,
+  });
 
   return res.json({
     reply: replyText,

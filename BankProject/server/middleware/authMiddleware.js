@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const logger = require('../config/logger').child({ module: 'authMiddleware' });
 
-function verifyToken(req, res, next) 
+function verifyToken(req, res, next)
 {
     let token = null;
 
@@ -23,7 +24,10 @@ function verifyToken(req, res, next)
         next(); 
     } catch (error) 
     {
-        console.error("JWT Verification Error:", error.message);
+        logger.warn('JWT verification failed', {
+            error: error.message,
+            path: req.originalUrl,
+        });
 
         if (error.name === 'TokenExpiredError') 
         {
