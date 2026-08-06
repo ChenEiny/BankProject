@@ -1,8 +1,9 @@
-const { ChatGroq } = require("@langchain/groq");
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 
-const model = new ChatGroq({
-  apiKey: process.env.GROQ_API_KEY,
-  model: "llama-3.3-70b-versatile",
+// Change LLM_MODEL in .env to switch models later without touching code.
+const model = new ChatGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  model: process.env.LLM_MODEL || "gemini-flash-latest",
   temperature: 0,
 });
 
