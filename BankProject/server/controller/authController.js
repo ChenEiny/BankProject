@@ -7,6 +7,7 @@ const transporter = require('../config/mailer');
 const { AppError } = require('../middleware/errorWrapper.js');
 const logger = require('../config/logger').child({ module: 'authController' });
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
 
 async function register(req) 
 {
@@ -51,7 +52,7 @@ async function register(req)
         { expiresIn: '15m' }
     );
 
-    const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${verificationToken}`;
+    const verificationLink = `${serverUrl}/api/auth/verify-email?token=${verificationToken}`;
 
     const mailOptions = {
         from: `"Safe Bank" <${process.env.EMAIL_USER}>`,
@@ -132,7 +133,8 @@ async function login(req, res)
 
     res.cookie('token', token, {
         httpOnly: true,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 60 * 60 * 1000
     });
 
@@ -175,6 +177,7 @@ async function verifyEmail(req, res)
         {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 15 * 60 * 1000
         });
 
@@ -198,7 +201,11 @@ async function logout(req, res)
         email: req.user?.email,
     });
 
-    res.clearCookie('token', { httpOnly: true });
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
     return { message: "Successful Logout. Token cleared." };
 }
 

@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const chatRoutes = require('./routes/chatRoute');
@@ -10,6 +9,7 @@ const { initSocket } = require('./socket');
 
 const { globalErrorHandler } = require('./middleware/errorWrapper');
 const requestLogger = require('./middleware/requestLogger');
+const { generalLimiter } = require('./middleware/rateLimiter');
 const logger = require('./config/logger');
 
 const app = express();
@@ -27,36 +27,12 @@ const jwtSecret = process.env.JWT_SECRET;
 
 
  app.use(cors({
-     origin: 'http://localhost:5173', 
-     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-     credentials: true 
+     origin: process.env.CLIENT_URL || 'http://localhost:5173',
+     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+     credentials: true
  }));
 
-// const generalLimiter = rateLimit({
-//     windowMs: 15 * 60 * 1000, 
-//     max: 100, 
-//     message: {
-//         error: "Too Many Requests",
-//         message: "Too Many Requests in short time."
-//     },
-//     standardHeaders: true, 
-//     legacyHeaders: false, 
-// });
-
-// app.use(generalLimiter);
-
-
-//only add it somehow to the user login option not in the entire server
-// const authLimiter = rateLimit({
-//     windowMs: 5 * 60 * 1000, 
-//     max: 5, 
-//     message: {
-//         error: "Too Many Login Attempts",
-//         message:"Too Many failed Attempts."
-//     },
-//     standardHeaders: true,
-//     legacyHeaders: false,
-// });
+app.use(generalLimiter);
 
 //Main Router start endpoint
 app.get('/', (req, res) => {

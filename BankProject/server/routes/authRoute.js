@@ -3,8 +3,9 @@ const router = express.Router();
 const authController = require('../controller/authController');
 const verifyToken = require('../middleware/authMiddleware');
 const { safeController } = require('../middleware/errorWrapper'); // מייבאים את המעטפת
+const { authLimiter } = require('../middleware/rateLimiter');
 
-router.post('/login', (req, res, next) => {
+router.post('/login', authLimiter, (req, res, next) => {
     let token = null;
 
     if (req.cookies && req.cookies.token) 
@@ -26,7 +27,7 @@ router.post('/login', (req, res, next) => {
     next();
 }, safeController(authController.login));
 
-router.post('/signup', safeController(authController.register));
+router.post('/signup', authLimiter, safeController(authController.register));
 router.get('/users', safeController(authController.getUsers));  
 
 router.get('/me', verifyToken, (req, res) => {

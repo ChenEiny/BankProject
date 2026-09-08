@@ -11,7 +11,7 @@ export const useSocket = (onTransferReceived?: (data: TransferNotification) => v
   }, [onTransferReceived]);
 
   useEffect(() => {
-    socketRef.current = io('http://localhost:3000', {
+    socketRef.current = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
       withCredentials: true, 
       transports: ['polling', 'websocket']
     });
