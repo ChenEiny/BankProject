@@ -9,8 +9,8 @@ services:
   - type: web
     name: bankproject-backend
     env: docker
-    dockerfilePath: ./server/Dockerfile
-    dockerContext: .
+    dockerfilePath: ./BankProject/server/Dockerfile
+    dockerContext: ./BankProject
     plan: free
     healthCheckPath: /api/health
     envVars:
@@ -65,7 +65,7 @@ services:
   - type: web
     name: bankproject-frontend
     env: static
-    rootDir: client
+    rootDir: BankProject/client
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
