@@ -48,7 +48,11 @@ services:
         value: https://cloud.langfuse.com
       # Secrets: fill these in manually in the Render dashboard after the
       # first blueprint deploy (Service -> Environment). Never commit them.
-      - key: BREVO_API_KEY
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
         sync: false
       - key: EMAIL_FROM
         sync: false

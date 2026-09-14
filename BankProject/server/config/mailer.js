@@ -1,29 +1,61 @@
-const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
-const FROM_ADDRESS = process.env.EMAIL_FROM; // must be a Brevo-verified sender
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const SEND_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
 
-// Render's free tier blocks outbound SMTP (ports 25/465/587), so verification
-// emails go through Brevo's HTTPS API instead of nodemailer/SMTP. Brevo only
-// needs a single verified sender (no domain/DNS), and unlike Resend's
-// sandbox mode, lets that sender send to any recipient.
-async function sendMail({ to, subject, html }) {
-    const response = await fetch(BREVO_API_URL, {
+function base64url(str) {
+    return Buffer.from(str, 'utf-8')
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+async function getAccessToken() {
+    const response = await fetch(TOKEN_URL, {
         method: 'POST',
-        headers: {
-            'api-key': process.env.BREVO_API_KEY,
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-        },
-        body: JSON.stringify({
-            sender: { email: FROM_ADDRESS, name: 'Safe Bank' },
-            to: [{ email: to }],
-            subject,
-            htmlContent: html
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: process.env.GMAIL_CLIENT_ID,
+            client_secret: process.env.GMAIL_CLIENT_SECRET,
+            refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+            grant_type: 'refresh_token'
         })
     });
 
     if (!response.ok) {
         const errorBody = await response.text();
-        throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
+        throw new Error(`Gmail token refresh error (${response.status}): ${errorBody}`);
+    }
+
+    const data = await response.json();
+    return data.access_token;
+}
+
+async function sendMail({ to, subject, html }) {
+    const accessToken = await getAccessToken();
+    const from = process.env.EMAIL_FROM;
+
+    const message = [
+        `To: ${to}`,
+        `From: Safe Bank <${from}>`,
+        `Subject: ${subject}`,
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=utf-8',
+        '',
+        html
+    ].join('\r\n');
+
+    const response = await fetch(SEND_URL, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ raw: base64url(message) })
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Gmail API error (${response.status}): ${errorBody}`);
     }
 
     return response.json();
