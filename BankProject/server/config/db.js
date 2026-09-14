@@ -16,15 +16,37 @@ async function initDatabase() {
             password VARCHAR(255) NOT NULL,
             phone VARCHAR(20) NOT NULL,
             role VARCHAR(50) DEFAULT 'customer',
-            is_verified BOOLEAN DEFAULT FALSE, 
+            is_verified BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+    const createAccountsTableQuery = `
+        CREATE TABLE IF NOT EXISTS accounts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+    const createTransactionsTableQuery = `
+        CREATE TABLE IF NOT EXISTS transactions (
+            id SERIAL PRIMARY KEY,
+            sender_account_id INTEGER REFERENCES accounts(id),
+            receiver_account_id INTEGER REFERENCES accounts(id),
+            amount NUMERIC(12, 2) NOT NULL,
+            transaction_type VARCHAR(50) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     `;
     try {
         await pool.query(createUsersTableQuery);
         console.log('✅ Users table is ready (verified/created)');
+        await pool.query(createAccountsTableQuery);
+        console.log('✅ Accounts table is ready (verified/created)');
+        await pool.query(createTransactionsTableQuery);
+        console.log('✅ Transactions table is ready (verified/created)');
     } catch (err) {
-        console.error('❌ Error creating users table:', err.stack);
+        console.error('❌ Error creating tables:', err.stack);
     }
 }
 

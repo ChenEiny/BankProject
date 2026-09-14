@@ -1,0 +1,79 @@
+databases:
+  - name: bankproject-db
+    databaseName: bank_project_db
+    user: bankproject
+    plan: free
+
+services:
+  # --- Backend API (Express + Socket.IO), built from the existing Dockerfile ---
+  - type: web
+    name: bankproject-backend
+    env: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        value: https://bankproject-frontend.onrender.com
+      - key: SERVER_URL
+        value: https://bankproject-backend.onrender.com
+      - key: DB_HOST
+        fromDatabase:
+          name: bankproject-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: bankproject-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: bankproject-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: bankproject-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: bankproject-db
+          property: database
+      - key: LLM_MODEL
+        value: openai/gpt-oss-20b
+      - key: LANGFUSE_BASE_URL
+        value: https://cloud.langfuse.com
+      # Secrets: fill these in manually in the Render dashboard after the
+      # first blueprint deploy (Service -> Environment). Never commit them.
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+
+  # --- Frontend (Vite/React) static site ---
+  - type: web
+    name: bankproject-frontend
+    env: static
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://bankproject-backend.onrender.com/api
+      - key: VITE_SOCKET_URL
+        value: https://bankproject-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
