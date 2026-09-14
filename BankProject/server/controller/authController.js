@@ -3,7 +3,8 @@ const UserModel = require('../model/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Account = require('../model/accountModel');
-const transporter = require('../config/mailer');
+const db = require('../config/db');
+const { getTransporter } = require('../config/mailer');
 const { AppError } = require('../middleware/errorWrapper.js');
 const logger = require('../config/logger').child({ module: 'authController' });
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -43,34 +44,53 @@ async function register(req)
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await UserModel.createUser({ email, password: hashedPassword, phone });
-    await Account.create(newUser.id);
 
-    const verificationToken = jwt.sign(
-        { userId: newUser.id }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: '15m' }
-    );
+    // Wrap user+account creation and the verification email in one
+    // transaction so a failed send (e.g. SMTP outage) rolls back the new
+    // rows instead of leaving an unverified user stuck holding the email.
+    const client = await db.connect();
+    let newUser;
+    try {
+        await client.query('BEGIN');
 
-    const verificationLink = `${serverUrl}/api/auth/verify-email?token=${verificationToken}`;
+        newUser = await UserModel.createUser({ email, password: hashedPassword, phone }, client);
+        await Account.create(newUser.id, client);
 
-    const mailOptions = {
-        from: `"Safe Bank" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Verify Your Bank Account',
-        html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px; max-width: 500px; margin: auto;">
-                <h2 style="color: #4c4caf;">Welcome to Safe Bank!</h2>
-                <p>Thank you for signing up. Please click the button below to verify your email and complete your registration:</p>
-                <div style="text-align: center; margin: 25px 0;">
-                    <a href="${verificationLink}" style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify My Account</a>
+        const verificationToken = jwt.sign(
+            { userId: newUser.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        const verificationLink = `${serverUrl}/api/auth/verify-email?token=${verificationToken}`;
+
+        const mailOptions = {
+            from: `"Safe Bank" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Verify Your Bank Account',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 5px; max-width: 500px; margin: auto;">
+                    <h2 style="color: #4c4caf;">Welcome to Safe Bank!</h2>
+                    <p>Thank you for signing up. Please click the button below to verify your email and complete your registration:</p>
+                    <div style="text-align: center; margin: 25px 0;">
+                        <a href="${verificationLink}" style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify My Account</a>
+                    </div>
+                    <p style="color: #ff0000; font-size: 12px; text-align: center;">This link will expire in 15 minutes.</p>
                 </div>
-                <p style="color: #ff0000; font-size: 12px; text-align: center;">This link will expire in 15 minutes.</p>
-            </div>
-        `            
-    };
+            `
+        };
 
-    await transporter.sendMail(mailOptions);
+        const transporter = await getTransporter();
+        await transporter.sendMail(mailOptions);
+
+        await client.query('COMMIT');
+    } catch (err) {
+        await client.query('ROLLBACK');
+        logger.warn("Registration rolled back", { email, error: err.message });
+        throw new AppError("Could not send verification email. Please try signing up again.", 502);
+    } finally {
+        client.release();
+    }
 
     logger.info("User registered", {
         userId: newUser.id,

@@ -2,17 +2,17 @@ const db = require('../config/db');
 
 
 const Account = {
-    create: async (userId) => {
+    create: async (userId, executor = db) => {
         const min = 500;
         const max = 5000;
         const randomBalance = parseFloat((Math.random() * (max - min) + min).toFixed(2));
 
         const query = `
-            INSERT INTO accounts (user_id, balance) 
-            VALUES ($1, $2) 
+            INSERT INTO accounts (user_id, balance)
+            VALUES ($1, $2)
             RETURNING *;
         `;
-        const { rows } = await db.query(query, [userId, randomBalance]);
+        const { rows } = await executor.query(query, [userId, randomBalance]);
         return rows[0];
     },
 

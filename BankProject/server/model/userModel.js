@@ -10,19 +10,19 @@ class UserModel {
         return rows[0]; 
     }
 
-    static async createUser(userData) 
+    static async createUser(userData, executor = db)
     {
         const { email, password, phone, role = 'customer' } = userData;
-        
+
         const queryText = `
             INSERT INTO users (email, password, phone, role)
             VALUES ($1, $2, $3, $4)
             RETURNING id, email, phone, role, created_at;
         `;
-        
+
         const values = [email, password, phone, role];
-        
-        const { rows } = await db.query(queryText, values);
+
+        const { rows } = await executor.query(queryText, values);
         return rows[0];
     }
 
