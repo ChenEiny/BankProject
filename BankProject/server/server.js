@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // avoids ENETUNREACH on hosts without outbound IPv6 (e.g. Render)
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
