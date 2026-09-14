@@ -48,7 +48,9 @@ services:
         value: https://cloud.langfuse.com
       # Secrets: fill these in manually in the Render dashboard after the
       # first blueprint deploy (Service -> Environment). Never commit them.
-      - key: RESEND_API_KEY
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
         sync: false
       - key: GROQ_API_KEY
         sync: false
