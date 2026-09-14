@@ -15,6 +15,7 @@ const { generalLimiter } = require('./middleware/rateLimiter');
 const logger = require('./config/logger');
 
 const app = express();
+app.set('trust proxy', 1); // Render sits behind a single proxy hop; needed for correct client IPs in rate limiting
 const server = http.createServer(app);
 
 app.use(express.json()); //MIDDLEWARE

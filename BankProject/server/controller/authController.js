@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Account = require('../model/accountModel');
 const db = require('../config/db');
-const { getTransporter } = require('../config/mailer');
+const { sendMail } = require('../config/mailer');
 const { AppError } = require('../middleware/errorWrapper.js');
 const logger = require('../config/logger').child({ module: 'authController' });
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -45,9 +45,6 @@ async function register(req)
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Wrap user+account creation and the verification email in one
-    // transaction so a failed send (e.g. SMTP outage) rolls back the new
-    // rows instead of leaving an unverified user stuck holding the email.
     const client = await db.connect();
     let newUser;
     try {
@@ -64,8 +61,7 @@ async function register(req)
 
         const verificationLink = `${serverUrl}/api/auth/verify-email?token=${verificationToken}`;
 
-        const mailOptions = {
-            from: `"Safe Bank" <${process.env.EMAIL_USER}>`,
+        await sendMail({
             to: email,
             subject: 'Verify Your Bank Account',
             html: `
@@ -78,10 +74,7 @@ async function register(req)
                     <p style="color: #ff0000; font-size: 12px; text-align: center;">This link will expire in 15 minutes.</p>
                 </div>
             `
-        };
-
-        const transporter = await getTransporter();
-        await transporter.sendMail(mailOptions);
+        });
 
         await client.query('COMMIT');
     } catch (err) {
