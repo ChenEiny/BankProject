@@ -9,6 +9,9 @@ const generalLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Render polls /api/health every few seconds; without this it alone
+    // exceeds the window and gets 429'd, which Render reads as unhealthy.
+    skip: (req) => req.path === '/api/health',
 });
 
 const authLimiter = rateLimit({
